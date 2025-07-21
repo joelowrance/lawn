@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
-namespace LawnCare.Shared;
+namespace LawnCare.Shared.OpenTelemetry;
 
-public class CommandHandlerMetrics : IDisposable
+public class QueryHandlerMetrics : IDisposable
 {
 	private readonly TimeProvider _timeProvider;
 	private readonly Meter _meter;
@@ -11,7 +11,7 @@ public class CommandHandlerMetrics : IDisposable
 	private readonly Counter<long> _totalCommandsNumber;
 	private readonly Histogram<double> _eventHandlingDuration;
 
-	public CommandHandlerMetrics(
+	public QueryHandlerMetrics(
 		IMeterFactory meterFactory,
 		TimeProvider timeProvider
 	)
@@ -20,24 +20,24 @@ public class CommandHandlerMetrics : IDisposable
 		_meter = meterFactory.Create(ActivitySourceProvider.DefaultSourceName);
 
 		_totalCommandsNumber = _meter.CreateCounter<long>(
-			TelemetryTags.Commands.TotalCommandsNumber,
-			unit: "{command}",
-			description: "Total number of commands send to command handlers");
+			TelemetryTags.Queries.TotalQueriesNumber,
+			unit: "{query}",
+			description: "Total number of queries send to query handlers");
 
 		_activeEventHandlingCounter = _meter.CreateUpDownCounter<long>(
-			TelemetryTags.Commands.ActiveCommandsNumber,
-			unit: "{command}",
-			description: "Number of commands currently being handled");
+			TelemetryTags.Queries.ActiveQueriesNumber,
+			unit: "{query}",
+			description: "Number of queries currently being handled");
 
 		_eventHandlingDuration = _meter.CreateHistogram<double>(
-			TelemetryTags.Commands.CommandHandlingDuration,
+			TelemetryTags.Queries.QueryHandlingDuration,
 			unit: "s",
-			description: "Measures the duration of inbound commands");
+			description: "Measures the duration of inbound queries");
 	}
 
-	public long CommandHandlingStart(string commandType)
+	public long QueryHandlingStart(string queryType)
 	{
-		var tags = new TagList { { TelemetryTags.Commands.CommandType, commandType } };
+		var tags = new TagList { { TelemetryTags.Queries.QueryType, queryType } };
 
 		if (_activeEventHandlingCounter.Enabled)
 		{
@@ -52,11 +52,11 @@ public class CommandHandlerMetrics : IDisposable
 		return _timeProvider.GetTimestamp();
 	}
 
-	public void CommandHandlingEnd(string commandType, long startingTimestamp)
+	public void QueryHandlingEnd(string queryType, long startingTimestamp)
 	{
 		var tags = _activeEventHandlingCounter.Enabled
 				   || _eventHandlingDuration.Enabled
-			? new TagList { { TelemetryTags.Commands.CommandType, commandType } }
+			? new TagList { { TelemetryTags.Queries.QueryType, queryType } }
 			: default;
 
 		if (_activeEventHandlingCounter.Enabled)

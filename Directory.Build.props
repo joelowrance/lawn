@@ -8,5 +8,6 @@
         <NoWarn>$(NoWarn);NU1507</NoWarn>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <GarbageCollectionAdaptationMode>1</GarbageCollectionAdaptationMode>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     </PropertyGroup>
 </Project>

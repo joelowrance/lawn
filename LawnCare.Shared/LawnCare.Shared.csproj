@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-	  <PackageVersion Include="MassTransit"  />
-    <PackageReference Include="MassTransit.RabbitMQ"  />
+	  <PackageReference Include="MassTransit"  />
+	  <PackageReference Include="MassTransit.RabbitMQ"  />
+	  <PackageReference Include="MediatR"  />
+	  <PackageReference Include="FluentValidation"  />
 	  <PackageReference Include="OpenTelemetry.Api.ProviderBuilderExtensions"  />
 	  <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol"  />
 	  <PackageReference Include="OpenTelemetry.Extensions.Hosting"  />

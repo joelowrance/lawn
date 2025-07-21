@@ -2,7 +2,7 @@ using MassTransit;
 
 using Microsoft.AspNetCore.Http;
 
-namespace LawnCare.Shared.MassTransit;
+namespace LawnCare.Shared.OpenTelemetry.MassTransit;
 
 public class OtelPublishFilter<T>(IActivityScope activityScope, IHttpContextAccessor httpContextAccessor) : IFilter<PublishContext<T>> where T : class
 {

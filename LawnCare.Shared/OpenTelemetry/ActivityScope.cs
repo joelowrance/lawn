@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace LawnCare.Shared;
+namespace LawnCare.Shared.OpenTelemetry;
 
 public interface IActivityScope
 {

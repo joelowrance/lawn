@@ -1,4 +1,4 @@
-﻿namespace LawnCare.Shared;
+﻿namespace LawnCare.Shared.OpenTelemetry;
 
 public static class TelemetryTags
 {
