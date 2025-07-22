@@ -1,0 +1,6 @@
+@LawnCare.CustomerApi_HostAddress = http://localhost:5187
+
+GET {{LawnCare.CustomerApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

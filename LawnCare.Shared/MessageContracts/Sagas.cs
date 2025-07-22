@@ -10,14 +10,14 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 	public State? Completed { get; private set; }
 	public State? Failed { get; private set; }
 
-	public Event<EstimateReceived>? EstimateReceived { get; private set; }
-	public Event<CustomerFound>? CustomerFound { get; private set; }
-	public Event<CustomerCreated>? CustomerCreated { get; private set; }
-	public Event<CustomerProcessingFailed>? CustomerProcessingFailed { get; private set; }
-	public Event<JobCreated>? JobCreated { get; private set; }
-	public Event<JobCreationFailed>? JobCreationFailed { get; private set; }
-	public Event<WelcomeEmailSent>? WelcomeEmailSent { get; private set; }
-	public Event<WelcomeEmailFailed>? WelcomeEmailFailed { get; private set; }
+	public Event<EstimateReceivedEvent>? EstimateReceived { get; private set; }
+	public Event<CustomerFoundEvent>? CustomerFound { get; private set; }
+	public Event<CustomerCreatedEvent>? CustomerCreated { get; private set; }
+	public Event<CustomerProcessingFailedEvent>? CustomerProcessingFailed { get; private set; }
+	public Event<JobCreatedEvent>? JobCreated { get; private set; }
+	public Event<JobCreationFailedEvent>? JobCreationFailed { get; private set; }
+	public Event<WelcomeEmailSentEvent>? WelcomeEmailSent { get; private set; }
+	public Event<WelcomeEmailFailedEvent>? WelcomeEmailFailed { get; private set; }
 
 	public EstimateProcessingSaga()
 	{
@@ -43,7 +43,7 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 					context.Saga.EstimatorId = context.Message.EstimatorId;
 					context.Saga.CreatedAt = DateTime.UtcNow;
 				})
-				.Send(context => new ProcessCustomer(
+				.Send(context => new ProcessCustomerCommand(
 					context.Message.TenantId,
 					context.Message.EstimateId,
 					context.Message.Customer))
@@ -57,7 +57,7 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 					context.Saga.CustomerId = context.Message.CustomerId;
 					context.Saga.IsNewCustomer = context.Message.IsNewCustomer;
 				})
-				.Send(context => new CreateJob(
+				.Send(context => new CreateJobCommand(
 					context.Saga.TenantId,
 					context.Saga.EstimateId,
 					context.Message.CustomerId,
@@ -70,7 +70,7 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 					context.Saga.CustomerId = context.Message.CustomerId;
 					context.Saga.IsNewCustomer = true;
 				})
-				.Send(context => new CreateJob(
+				.Send(context => new CreateJobCommand(
 					context.Saga.TenantId,
 					context.Saga.EstimateId,
 					context.Message.CustomerId,
@@ -87,7 +87,7 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 				.Then(context => context.Saga.JobId = context.Message.JobId)
 				.If(context => context.Saga.IsNewCustomer,
 					binder => binder
-						.Send(context => new SendWelcomeEmail(
+						.Send(context => new SendWelcomeEmailCommand(
 							context.Saga.TenantId,
 							context.Saga.CustomerId!.Value,
 							context.Saga.CustomerInfo,
@@ -96,7 +96,7 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 				.If(context => !context.Saga.IsNewCustomer,
 					binder => binder
 						.Then(context => context.Saga.CompletedAt = DateTime.UtcNow)
-						.Publish(context => new EstimateProcessingCompleted(
+						.Publish(context => new EstimateProcessingCompletedEvent(
 							context.Saga.TenantId,
 							context.Saga.EstimateId,
 							context.Saga.CustomerId!.Value,
@@ -112,7 +112,7 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 		During(SendingWelcomeEmail,
 			When(WelcomeEmailSent)
 				.Then(context => context.Saga.CompletedAt = DateTime.UtcNow)
-				.Publish(context => new EstimateProcessingCompleted(
+				.Publish(context => new EstimateProcessingCompletedEvent(
 					context.Saga.TenantId,
 					context.Saga.EstimateId,
 					context.Saga.CustomerId!.Value,
@@ -126,7 +126,7 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 					context.Saga.WelcomeEmailError = context.Message.Reason;
 					context.Saga.CompletedAt = DateTime.UtcNow;
 				})
-				.Publish(context => new EstimateProcessingCompleted(
+				.Publish(context => new EstimateProcessingCompletedEvent(
 					context.Saga.TenantId,
 					context.Saga.EstimateId,
 					context.Saga.CustomerId!.Value,

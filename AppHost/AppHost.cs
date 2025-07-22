@@ -14,13 +14,25 @@ var rabbitMq = builder.AddRabbitMQ("rabbitmq", rabbitUser, rabbitPass)
 // //TODO:  figure out health check
 // //TODO:  figure out persistent port (.WithManagementPlugin(port: 99898);?
 
+ var postgreSQL = builder.AddPostgres("postgres-sql", postgresUser, postgresPass)
+ 	.WithLifetime(ContainerLifetime.Persistent)
+    .WithDataBindMount(@"c:\temp\LawnCare-Postgres")
+ 	.WithPgAdmin();
 
-// var postgres = builder.AddPostgres("postgres-sql", postgresUser, postgresPass)
-// 	.WithLifetime(ContainerLifetime.Persistent)
-// 	.WithPgAdmin();
+var database = postgreSQL.AddDatabase("lawncare", "postgres");
 
 // Other projects in the solution
-builder.AddProject<Projects.LawnCare_JobApi>("job-api");
+builder.AddProject<Projects.LawnCare_JobApi>("job-api")
+	.WithReference(rabbitMq)
+	.WaitFor(rabbitMq);
+
+builder.AddProject<Projects.LawnCare_CustomerApi>("customer-api")
+	.WithReference(rabbitMq)
+	.WaitFor(rabbitMq)
+	.WithReference(database)
+	.WaitFor(database);
+	
+
 
 
 builder.Build().Run();

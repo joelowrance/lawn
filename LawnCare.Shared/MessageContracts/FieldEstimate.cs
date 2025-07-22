@@ -23,20 +23,20 @@ public class FieldEstimate
 
 public record JobServiceItem(string ServiceName, decimal Quantity, string Comment, decimal Price);
 
-public record ProcessCustomer(Guid TenantId, Guid EstimateId, CustomerInfo Customer);
-public record CreateJob(Guid TenantId, Guid EstimateId, Guid CustomerId, JobDetails Job);
-public record SendWelcomeEmail(Guid TenantId, Guid CustomerId, CustomerInfo Customer, Guid EstimateId);
+public record ProcessCustomerCommand(Guid TenantId, Guid EstimateId, CustomerInfo Customer);
+public record CreateJobCommand(Guid TenantId, Guid EstimateId, Guid CustomerId, JobDetails Job);
+public record SendWelcomeEmailCommand(Guid TenantId, Guid CustomerId, CustomerInfo Customer, Guid EstimateId);
 
 // Events
-public record EstimateReceived(Guid TenantId, Guid EstimateId, CustomerInfo Customer, JobDetails Job, string EstimatorId);
-public record CustomerFound(Guid TenantId, Guid EstimateId, Guid CustomerId, bool IsNewCustomer = false);
-public record CustomerCreated(Guid TenantId, Guid EstimateId, Guid CustomerId);
-public record CustomerProcessingFailed(Guid TenantId, Guid EstimateId, string Reason);
-public record JobCreated(Guid TenantId, Guid EstimateId, Guid JobId);
-public record JobCreationFailed(Guid TenantId, Guid EstimateId, string Reason);
-public record WelcomeEmailSent(Guid TenantId, Guid EstimateId, Guid CustomerId);
-public record WelcomeEmailFailed(Guid TenantId, Guid EstimateId, Guid CustomerId, string Reason);
-public record EstimateProcessingCompleted(Guid TenantId, Guid EstimateId, Guid CustomerId, Guid JobId, bool WasNewCustomer);
+public record EstimateReceivedEvent(Guid TenantId, Guid EstimateId, CustomerInfo Customer, JobDetails Job, string EstimatorId);
+public record CustomerFoundEvent(Guid TenantId, Guid EstimateId, Guid CustomerId, bool IsNewCustomer = false);
+public record CustomerCreatedEvent(Guid TenantId, Guid EstimateId, Guid CustomerId);
+public record CustomerProcessingFailedEvent(Guid TenantId, Guid EstimateId, string Reason);
+public record JobCreatedEvent(Guid TenantId, Guid EstimateId, Guid JobId);
+public record JobCreationFailedEvent(Guid TenantId, Guid EstimateId, string Reason);
+public record WelcomeEmailSentEvent(Guid TenantId, Guid EstimateId, Guid CustomerId);
+public record WelcomeEmailFailedEvent(Guid TenantId, Guid EstimateId, Guid CustomerId, string Reason);
+public record EstimateProcessingCompletedEvent(Guid TenantId, Guid EstimateId, Guid CustomerId, Guid JobId, bool WasNewCustomer);
 
 // Data Models
 public record CustomerInfo(string Email, string FirstName, string LastName, string HomePhone, string CellPhone, Address Address);
