@@ -1,0 +1,7 @@
+﻿services:
+  lawncare.customerapi:
+    image: lawncare.customerapi
+    build:
+      context: .
+      dockerfile: LawnCare.CustomerApi/Dockerfile
+

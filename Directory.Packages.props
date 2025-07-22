@@ -1,0 +1,44 @@
+﻿<Project>
+	<PropertyGroup>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+		<CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+		<AspireVersion>9.3.1</AspireVersion>
+		<OpenTelemetryVersion>1.12.0</OpenTelemetryVersion>
+		<EfVersion>9.0.7</EfVersion>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageVersion Include="FluentValidation" Version="12.0.0" />
+		<PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.1" />
+		<PackageVersion Include="MassTransit" Version="8.5.1" />
+		<PackageVersion Include="MassTransit.RabbitMQ" Version="8.5.1" />
+		<PackageVersion Include="MediatR" Version="13.0.0" />
+		<PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6"/>
+	</ItemGroup>
+	<ItemGroup Label="EntityFramework">
+		<PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfVersion)" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(EfVersion)" PrivateAssets="all" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(EfVersion)" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="$(EfVersion)" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="$(EfVersion)" />
+		<PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="$(EfVersion)" />
+		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4"/>
+		<PackageVersion Include="Npgsql.OpenTelemetry" Version="9.0.3"/>
+		<PackageVersion Include="EFCore.NamingConventions" Version="9.0.0" />
+	</ItemGroup>
+	<ItemGroup Label="Aspire">
+		<PackageVersion Include="Aspire.Hosting.AppHost" Version="$(AspireVersion)"/>
+		<PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="$(AspireVersion)"/>
+		<PackageVersion Include="Aspire.Hosting.RabbitMQ" Version="$(AspireVersion)"/>
+		<PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.7.0"/>
+		<PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.3.1"/>
+		<PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0"/>
+	</ItemGroup>
+	<ItemGroup Label="OpenTelemetry">
+		<PackageVersion Include="OpenTelemetry.Api.ProviderBuilderExtensions" Version="$(OpenTelemetryVersion)" />
+		<PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="$(OpenTelemetryVersion)" />
+		<PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="$(OpenTelemetryVersion)" />
+		<PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="$(OpenTelemetryVersion)" />
+		<PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="$(OpenTelemetryVersion)" />
+		<PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="$(OpenTelemetryVersion)" />
+	</ItemGroup>
+</Project>
