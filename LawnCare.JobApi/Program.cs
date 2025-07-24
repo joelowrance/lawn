@@ -49,7 +49,7 @@ app.UseHttpsRedirection();
 
 app.MapPost("/estimate", async (IMediator mediator, FieldEstimate estimate) =>
 {
-	await mediator.Send(estimate);
+	await mediator.Send(new ProcessEstimateCommand(estimate));
 	// needs a better result than just a status code
 	return Results.Created();
 });

@@ -1,6 +1,39 @@
 @LawnCare.JobApi_HostAddress = http://localhost:5144
 
-GET {{LawnCare.JobApi_HostAddress}}/weatherforecast/
-Accept: application/json
+### POST Estimate
+POST http://localhost:5144/estimate
+Content-Type: application/json
 
-###
+{
+  "userId": "user123",
+  "tenantId": "tenant456",
+  "customerFirstName": "John",
+  "customerLastName": "Doe",
+  "customerAddress1": "123 Main St",
+  "customerAddress2": "",
+  "customerAddress3": "",
+  "customerCity": "Anytown",
+  "customerState": "CA",
+  "customerZip": "90210",
+  "customerHomePhone": "555-123-4567",
+  "customerCellPhone": "555-987-6543",
+  "customerEmail": "john.doe@example.com",
+  "scheduledDate": "2025-08-23T14:00:00.000Z",
+  "estimatedCost": 250.00,
+  "description": "Weekly lawn maintenance service",
+  "services": [
+    {
+      "serviceName": "Lawn Mowing",
+      "quantity": 1,
+      "comment": "Front and back yard",
+      "price": 100.00
+    },
+    {
+      "serviceName": "Hedge Trimming",
+      "quantity": 2,
+      "comment": "Front shrubs",
+      "price": 75.00
+    }
+  ]
+}
+

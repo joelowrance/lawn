@@ -37,19 +37,16 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddValidatorsFromAssemblyContaining<Program>(includeInternalTypes: true);
 builder.Services.AddMassTransit(x =>
 {
-
 	x.AddSagaStateMachine<EstimateProcessingSaga, EstimateProcessingState>()
 		.EntityFrameworkRepository(r =>
 		{
-			r.ConcurrencyMode = ConcurrencyMode.Pessimistic;
+			r.ConcurrencyMode = ConcurrencyMode.Optimistic;
 			r.AddDbContext<DbContext, SagaDbContext>((provider, bx) =>
 			{
-				bx.UseNpgsql(builder.Configuration.GetConnectionString("saga-connection"));
+				bx.UseNpgsql(builder.Configuration.GetConnectionString("saga-connection"))
+					.UseSnakeCaseNamingConvention();
 			});
 		});
-	
-	
-	
 	
 	x.SetKebabCaseEndpointNameFormatter();
 	x.UsingRabbitMq((context, configuration) =>
