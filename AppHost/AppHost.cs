@@ -7,17 +7,24 @@ var postgresUser = builder.AddParameter("postgresUser", "sqluser");
 var postgresPass = builder.AddParameter("postgresPass", "sqlpass");
 
 // 3rd party infrastructure
-var rabbitMq = builder.AddRabbitMQ("rabbitmq", rabbitUser, rabbitPass)
+var rabbitMq = builder.AddRabbitMQ("rabbitmq", rabbitUser, rabbitPass, 5672)
 	.WithLifetime(ContainerLifetime.Persistent) //stays around even when the app host stops.
 	.WithDataBindMount(@"c:\temp\LawnCare-RabbitMq", isReadOnly: false)
-	.WithManagementPlugin();
+	.WithManagementPlugin( port: 15672 );
+	
+
 // //TODO:  figure out health check
 // //TODO:  figure out persistent port (.WithManagementPlugin(port: 99898);?
 
- var postgreSQL = builder.AddPostgres("postgres-sql", postgresUser, postgresPass)
+ var postgreSQL = builder.AddPostgres(
+		 "postgres-sql", postgresUser, postgresPass, port: 5432)
  	.WithLifetime(ContainerLifetime.Persistent)
     .WithDataBindMount(@"c:\temp\LawnCare-Postgres")
- 	.WithPgAdmin();
+ 	.WithPgAdmin(cfg =>
+    {
+	    cfg.WithHostPort(15432);
+    });
+
 
 var database = postgreSQL.AddDatabase("postgres-connection", "postgres");
 var sagaDb = postgreSQL.AddDatabase("saga-connection", "sagas");
