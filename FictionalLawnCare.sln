@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.JobApi", "LawnCare
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.CustomerApi", "LawnCare.CustomerApi\LawnCare.CustomerApi.csproj", "{F66B7592-579E-4575-B952-8D0610DC7ADD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.StateMachine", "LawnCare.StateMachine\LawnCare.StateMachine.csproj", "{3B4AE65E-FD21-4454-AC94-8A6A83483B66}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{F66B7592-579E-4575-B952-8D0610DC7ADD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F66B7592-579E-4575-B952-8D0610DC7ADD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F66B7592-579E-4575-B952-8D0610DC7ADD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B4AE65E-FD21-4454-AC94-8A6A83483B66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B4AE65E-FD21-4454-AC94-8A6A83483B66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B4AE65E-FD21-4454-AC94-8A6A83483B66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B4AE65E-FD21-4454-AC94-8A6A83483B66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

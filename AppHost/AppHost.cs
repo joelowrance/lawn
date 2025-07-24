@@ -19,18 +19,25 @@ var rabbitMq = builder.AddRabbitMQ("rabbitmq", rabbitUser, rabbitPass)
     .WithDataBindMount(@"c:\temp\LawnCare-Postgres")
  	.WithPgAdmin();
 
-var database = postgreSQL.AddDatabase("lawncare", "postgres");
+var database = postgreSQL.AddDatabase("postgres-connection", "postgres");
+var sagaDb = postgreSQL.AddDatabase("saga-connection", "sagas");
 
 // Other projects in the solution
 builder.AddProject<Projects.LawnCare_JobApi>("job-api")
 	.WithReference(rabbitMq)
 	.WaitFor(rabbitMq);
 
-builder.AddProject<Projects.LawnCare_CustomerApi>("customer-api")
+builder.AddProject<Projects.LawnCare_StateMachine>("state-machine")
 	.WithReference(rabbitMq)
 	.WaitFor(rabbitMq)
-	.WithReference(database)
-	.WaitFor(database);
+	.WithReference(sagaDb)
+	.WaitFor(sagaDb);
+
+// builder.AddProject<Projects.LawnCare_CustomerApi>("customer-api")
+// 	.WithReference(rabbitMq)
+// 	.WaitFor(rabbitMq)
+// 	.WithReference(database)
+// 	.WaitFor(database);
 	
 
 

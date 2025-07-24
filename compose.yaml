@@ -5,3 +5,15 @@
       context: .
       dockerfile: LawnCare.CustomerApi/Dockerfile
 
+  lawncare.statemachine:
+    image: lawncare.statemachine
+    build:
+      context: .
+      dockerfile: LawnCare.StateMachine/Dockerfile
+
+  lawncare.statemachine-1:
+    image: lawncare.statemachine-1
+    build:
+      context: .
+      dockerfile: LawnCare.StateMachine/Dockerfile
+

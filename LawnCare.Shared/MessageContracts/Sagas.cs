@@ -153,4 +153,7 @@ public class EstimateProcessingState : SagaStateMachineInstance
 	public string? WelcomeEmailError { get; set; }
 	public DateTime CreatedAt { get; set; }
 	public DateTime? CompletedAt { get; set; }
+	
+	//Shadow property
+	public byte[]? Version { get; set; } // For optimistic concurrency
 }

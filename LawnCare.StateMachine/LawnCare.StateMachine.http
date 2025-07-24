@@ -1,0 +1,6 @@
+@LawnCare.StateMachine_HostAddress = http://localhost:5131
+
+GET {{LawnCare.StateMachine_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
