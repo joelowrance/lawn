@@ -4,7 +4,7 @@ namespace LawnCare.CustomerApi.Infrastructure;
 	
 public class CustomerDbContext : DbContext
 {
-	ILogger<CustomerDbContext> _logger;
+	readonly ILogger<CustomerDbContext> _logger;
 
 	public CustomerDbContext(DbContextOptions options, ILogger<CustomerDbContext> logger) : base(options)
 	{
@@ -25,8 +25,8 @@ public class CustomerDbContext : DbContext
 			entity.HasIndex(e => new { e.TenantId, e.Status });
                 
 			entity.Property(e => e.Id).ValueGeneratedOnAdd();
-			entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-			entity.Property(e => e.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+			entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+			entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 
 			// Configure enum conversions
 			entity.Property(e => e.CustomerType)

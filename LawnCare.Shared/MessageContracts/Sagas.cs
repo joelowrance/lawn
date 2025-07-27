@@ -43,7 +43,7 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 					context.Saga.EstimatorId = context.Message.EstimatorId;
 					context.Saga.CreatedAt = DateTime.UtcNow;
 				})
-				.Send(context => new ProcessCustomerCommand(
+				.Publish(context => new ProcessCustomerCommand(
 					context.Message.TenantId,
 					context.Message.EstimateId,
 					context.Message.Customer))
@@ -57,7 +57,7 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 					context.Saga.CustomerId = context.Message.CustomerId;
 					context.Saga.IsNewCustomer = context.Message.IsNewCustomer;
 				})
-				.Send(context => new CreateJobCommand(
+				.Publish(context => new CreateJobCommand(
 					context.Saga.TenantId,
 					context.Saga.EstimateId,
 					context.Message.CustomerId,
@@ -70,7 +70,7 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 					context.Saga.CustomerId = context.Message.CustomerId;
 					context.Saga.IsNewCustomer = true;
 				})
-				.Send(context => new CreateJobCommand(
+				.Publish(context => new CreateJobCommand(
 					context.Saga.TenantId,
 					context.Saga.EstimateId,
 					context.Message.CustomerId,
@@ -87,7 +87,7 @@ public class EstimateProcessingSaga : MassTransitStateMachine<EstimateProcessing
 				.Then(context => context.Saga.JobId = context.Message.JobId)
 				.If(context => context.Saga.IsNewCustomer,
 					binder => binder
-						.Send(context => new SendWelcomeEmailCommand(
+						.Publish(context => new SendWelcomeEmailCommand(
 							context.Saga.TenantId,
 							context.Saga.CustomerId!.Value,
 							context.Saga.CustomerInfo,

@@ -1,6 +1,7 @@
 using FluentValidation;
 
 using LawnCare.CustomerApi.Infrastructure;
+using LawnCare.Shared.EntityFramework;
 using LawnCare.Shared.MessageContracts;
 using LawnCare.Shared.OpenTelemetry;
 using LawnCare.Shared.Pipelines;
@@ -39,9 +40,11 @@ builder.Services.AddSingleton<QueryHandlerMetrics>();
 builder.Services.AddDbContext<CustomerDbContext>(dbContextOptionsBuilder =>
 {
 	dbContextOptionsBuilder.UseNpgsql(
-			builder.Configuration.GetConnectionString("postgres"))
+			builder.Configuration.GetConnectionString("customers-connection"))
 		.UseSnakeCaseNamingConvention();
 });
+builder.Services.AddMigration<CustomerDbContext>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 var app = builder.Build();
 
@@ -60,14 +63,29 @@ app.MapGet("/", () =>
 
 app.Run();
 
-public class ProcessCustomerCommandConsumer(ILogger<ProcessCustomerCommand> logger)
-	: IConsumer<ProcessCustomerCommand>
+public class ProcessCustomerCommandConsumer : IConsumer<ProcessCustomerCommand>
 {
+	private readonly ILogger<ProcessCustomerCommand> _logger;
+	private readonly ICustomerService _customerService;
+
+	public ProcessCustomerCommandConsumer(
+		ILogger<ProcessCustomerCommand> logger,
+		ICustomerService customerService)
+	{
+		_logger = logger;
+		_customerService = customerService;
+	}
+
 	public async Task Consume(ConsumeContext<ProcessCustomerCommand> context)
 	{
 		ArgumentNullException.ThrowIfNull(context);
-		logger.LogInformation("Received message @{name}, @{value}", context.Message.Customer, context.Message);
-		await Task.Delay(Random.Shared.Next(1000, 60000));
+		_logger.LogInformation("Received customer processing message for {CustomerEmail}", 
+			context.Message.Customer.Email);
+
+		await _customerService.ProcessCustomerAsync(context.Message);
+
+		_logger.LogInformation("Successfully processed customer message for {CustomerEmail}", 
+			context.Message.Customer.Email);
 	}
 }
 
@@ -86,3 +104,4 @@ internal class EstimateRequestConsumerDefinition : ConsumerDefinition<ProcessCus
 		endpointConfigurator.UseMessageRetry(r => r.Intervals(100, 200, 500, 800, 1000));
 	}
 }
+

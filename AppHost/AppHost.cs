@@ -26,8 +26,8 @@ var rabbitMq = builder.AddRabbitMQ("rabbitmq", rabbitUser, rabbitPass, 5672)
     });
 
 
-var database = postgreSQL.AddDatabase("postgres-connection", "postgres");
-var sagaDb = postgreSQL.AddDatabase("saga-connection", "sagas");
+ var customerDatabase = postgreSQL.AddDatabase("customers-connection", "customers");
+ var sagaDb = postgreSQL.AddDatabase("saga-connection", "sagas");
 
 // Other projects in the solution
 builder.AddProject<Projects.LawnCare_JobApi>("job-api")
@@ -40,13 +40,10 @@ builder.AddProject<Projects.LawnCare_StateMachine>("state-machine")
 	.WithReference(sagaDb)
 	.WaitFor(sagaDb);
 
-// builder.AddProject<Projects.LawnCare_CustomerApi>("customer-api")
-// 	.WithReference(rabbitMq)
-// 	.WaitFor(rabbitMq)
-// 	.WithReference(database)
-// 	.WaitFor(database);
-	
-
-
+ builder.AddProject<Projects.LawnCare_CustomerApi>("customer-api")
+ 	.WithReference(rabbitMq)
+ 	.WaitFor(rabbitMq)
+ 	.WithReference(customerDatabase)
+ 	.WaitFor(customerDatabase);
 
 builder.Build().Run();
