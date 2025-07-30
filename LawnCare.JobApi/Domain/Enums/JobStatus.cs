@@ -2,6 +2,7 @@
 
 public enum JobStatus
 {
+	New = 0,
 	Pending = 1,
 	Scheduled = 2,
 	InProgress = 3,

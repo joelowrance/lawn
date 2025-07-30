@@ -6,7 +6,7 @@ Content-Type: application/json
 
 {
   "userId": "user123",
-  "tenantId": "tenant456",
+  "tenantId": "729C5768-6534-4C1D-815C-9E15613F1325",
   "customerFirstName": "John",
   "customerLastName": "Doe",
   "customerAddress1": "123 Main St",
@@ -19,7 +19,8 @@ Content-Type: application/json
   "customerCellPhone": "555-987-6543",
   "customerEmail": "john.doe@example.com",
   "scheduledDate": "2025-08-23T14:00:00.000Z",
-  "estimatedCost": 250.00,
+  "estimatedCost": 250.00, 
+  "estimatedDuration": 16,
   "description": "Weekly lawn maintenance service",
   "services": [
     {

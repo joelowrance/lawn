@@ -17,20 +17,20 @@ public class JobDomainService
 		return requestedDate > DateTime.UtcNow;
 	}
 
-	public JobPriority CalculatePriority(ServiceType serviceType, DateTime requestedDate)
-	{
-		// Emergency services get high priority
-		if (serviceType.ServiceName.Contains("Emergency"))
-			return JobPriority.Emergency;
-
-		// Tree removal gets higher priority than lawn care
-		if (serviceType.Category == "TreeSpecialist")
-			return JobPriority.High;
-
-		// Jobs requested for today get high priority
-		if (requestedDate.Date == DateTime.Today)
-			return JobPriority.High;
-
-		return JobPriority.Normal;
-	}
+	// public JobPriority CalculatePriority(ServiceType serviceType, DateTime requestedDate)
+	// {
+	// 	// Emergency services get high priority
+	// 	if (serviceType.ServiceName.Contains("Emergency"))
+	// 		return JobPriority.Emergency;
+	//
+	// 	// Tree removal gets higher priority than lawn care
+	// 	if (serviceType.Category == "TreeSpecialist")
+	// 		return JobPriority.High;
+	//
+	// 	// Jobs requested for today get high priority
+	// 	if (requestedDate.Date == DateTime.Today)
+	// 		return JobPriority.High;
+	//
+	// 	return JobPriority.Normal;
+	// }
 }

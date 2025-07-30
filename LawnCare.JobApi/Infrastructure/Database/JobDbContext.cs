@@ -5,14 +5,11 @@
 // Infrastructure/Persistence/JobDbContext.cs
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Microsoft.Extensions.Logging;
+
 using System.Text.Json;
 using LawnCare.JobApi.Domain.Entities;
 using LawnCare.JobApi.Domain.ValueObjects;
-using LawnCare.JobApi.Domain.Enums;
-using LawnCare.JobApi.Domain.Common;
-
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using LawnCare.JobApi.Infrastructure.Database;
 
 namespace JobService.Infrastructure.Persistence
 {
@@ -42,7 +39,7 @@ namespace JobService.Infrastructure.Persistence
 
         // DbSets for aggregate roots and entities
         public DbSet<Job> Jobs { get; set; } = null!;
-        public DbSet<JobRequirement> JobRequirements { get; set; } = null!;
+        public DbSet<JobServiceItem> JobServiceItems { get; set; } = null!;
         public DbSet<JobNote> JobNotes { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -53,7 +50,7 @@ namespace JobService.Infrastructure.Persistence
 
             // Apply entity configurations
             modelBuilder.ApplyConfiguration(new JobConfiguration());
-            modelBuilder.ApplyConfiguration(new JobRequirementConfiguration());
+            modelBuilder.ApplyConfiguration(new JobServiceItemConfiguration());
             modelBuilder.ApplyConfiguration(new JobNoteConfiguration());
 
             // Configure value object conversions
@@ -99,13 +96,13 @@ namespace JobService.Infrastructure.Persistence
             catch (DbUpdateConcurrencyException ex)
             {
                 _logger.LogError(ex, "Concurrency conflict occurred while saving changes");
-                throw new Infrastructure.Exceptions.ConcurrencyException(
+                throw new Exceptions.ConcurrencyException(
                     "A concurrency conflict occurred. The record may have been modified by another user.", ex);
             }
             catch (DbUpdateException ex)
             {
                 _logger.LogError(ex, "Database update failed while saving changes");
-                throw new Infrastructure.Exceptions.PersistenceException(
+                throw new Exceptions.PersistenceException(
                     "Failed to save changes to the database.", ex);
             }
         }
@@ -125,9 +122,9 @@ private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
                 v => TenantId.From(v));
 
             // CustomerId conversion
-            var customerIdConverter = new ValueConverter<CustomerId, Guid>(
-                v => v.Value,
-                v => CustomerId.From(v));
+            var customerIdConverter = new ValueConverter<CustomerId?, Guid?>(
+                v => v != null ? v.Value : null,
+                v =>  v.HasValue ? CustomerId.From(v.Value) : null);
 
             // TechnicianId conversion (nullable)
             var technicianIdConverter = new ValueConverter<TechnicianId?, Guid?>(
@@ -145,20 +142,20 @@ private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
                 v => DeserializeNullableMoney(v));
 
             // EstimatedDuration conversion - store as TimeSpan ticks
-            var estimatedDurationConverter = new ValueConverter<EstimatedDuration, long>(
-                v => v.Duration.Ticks,
-                v => new EstimatedDuration((int)TimeSpan.FromTicks(v).TotalHours, 
-                                         (int)TimeSpan.FromTicks(v).Minutes % 60));
+            // var estimatedDurationConverter = new ValueConverter<EstimatedDuration, long>(
+            //     v => v.Duration.Ticks,
+            //     v => new EstimatedDuration((int)TimeSpan.FromTicks(v).TotalHours, 
+            //                              (int)TimeSpan.FromTicks(v).Minutes % 60));
 
             // ServiceType conversion - store as JSON
-            var serviceTypeConverter = new ValueConverter<ServiceType, string>(
-                v => JsonSerializer.Serialize(new ServiceTypeDto(v.Category, v.ServiceName, v.Description), JsonOptions),
-                v => DeserializeServiceType(v));
+            // var serviceTypeConverter = new ValueConverter<ServiceType, string>(
+            //     v => JsonSerializer.Serialize(new ServiceTypeDto(v.Category, v.ServiceName, v.Description), JsonOptions),
+            //     v => DeserializeServiceType(v));
 
             // ServiceAddress conversion - store as JSON
             var serviceAddressConverter = new ValueConverter<ServiceAddress, string>(
                 v => JsonSerializer.Serialize(new ServiceAddressDto(
-                    v.Street, v.City, v.State, v.ZipCode, v.ApartmentUnit, v.Latitude, v.Longitude), JsonOptions),
+                    v.Street1, v.Street2, v.Street3, v.City, v.State, v.ZipCode, v.Latitude, v.Longitude), JsonOptions),
                 v => DeserializeServiceAddress(v));
 
             // Apply conversions to Job entity
@@ -173,8 +170,8 @@ private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
                     .IsRequired();
 
                 entity.Property(e => e.CustomerId)
-                    .HasConversion(customerIdConverter)
-                    .IsRequired();
+	                .HasConversion(customerIdConverter);
+                    
 
                 entity.Property(e => e.AssignedTechnicianId)
                     .HasConversion(technicianIdConverter);
@@ -189,12 +186,6 @@ private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
                     .HasColumnType("nvarchar(100)");
 
                 entity.Property(e => e.EstimatedDuration)
-                    .HasConversion(estimatedDurationConverter)
-                    .IsRequired();
-
-                entity.Property(e => e.ServiceType)
-                    .HasConversion(serviceTypeConverter)
-                    .HasColumnType("nvarchar(500)")
                     .IsRequired();
 
                 entity.Property(e => e.ServiceAddress)
@@ -262,7 +253,7 @@ private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
 
             foreach (var entry in entries)
             {
-                if (entry.Entity is Job job)
+                if (entry.Entity is Job _)
                 {
                     if (entry.State == EntityState.Modified)
                     {
@@ -352,47 +343,47 @@ private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
 	        }
         }
         
-        private static string SerializeServiceType(ServiceType serviceType)
-        {
-            var dto = new ServiceTypeDto(
-                serviceType.Category, 
-                serviceType.ServiceName, 
-                serviceType.Description);
-            return JsonSerializer.Serialize(dto, JsonOptions);
-        }
+        // private static string SerializeServiceType(ServiceType serviceType)
+        // {
+        //     var dto = new ServiceTypeDto(
+        //         serviceType.Category, 
+        //         serviceType.ServiceName, 
+        //         serviceType.Description);
+        //     return JsonSerializer.Serialize(dto, JsonOptions);
+        // }
 
-        private static ServiceType DeserializeServiceType(string json)
-        {
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                return ServiceType.LawnMowing(); // Default fallback
-            }
+        // private static ServiceType DeserializeServiceType(string json)
+        // {
+        //     if (string.IsNullOrWhiteSpace(json))
+        //     {
+        //         return ServiceType.LawnMowing(); // Default fallback
+        //     }
+        //
+        //     try
+        //     {
+        //         var dto = JsonSerializer.Deserialize<ServiceTypeDto>(json, JsonOptions);
+        //         return dto != null 
+        //             ? new ServiceType(dto.Category, dto.ServiceName, dto.Description)
+        //             : ServiceType.LawnMowing(); // Safe fallback
+        //     }
+        //     catch (JsonException)
+        //     {
+        //         return ServiceType.LawnMowing(); // Safe fallback for corrupted data
+        //     }
+        // }
 
-            try
-            {
-                var dto = JsonSerializer.Deserialize<ServiceTypeDto>(json, JsonOptions);
-                return dto != null 
-                    ? new ServiceType(dto.Category, dto.ServiceName, dto.Description)
-                    : ServiceType.LawnMowing(); // Safe fallback
-            }
-            catch (JsonException)
-            {
-                return ServiceType.LawnMowing(); // Safe fallback for corrupted data
-            }
-        }
-
-        private static string SerializeServiceAddress(ServiceAddress address)
-        {
-            var dto = new ServiceAddressDto(
-                address.Street,
-                address.City,
-                address.State,
-                address.ZipCode,
-                address.ApartmentUnit,
-                address.Latitude,
-                address.Longitude);
-            return JsonSerializer.Serialize(dto, JsonOptions);
-        }
+        // private static string SerializeServiceAddress(ServiceAddress address)
+        // {
+        //     var dto = new ServiceAddressDto(
+        //         address.Street,
+        //         address.City,
+        //         address.State,
+        //         address.ZipCode,
+        //         address.ApartmentUnit,
+        //         address.Latitude,
+        //         address.Longitude);
+        //     return JsonSerializer.Serialize(dto, JsonOptions);
+        // }
 
         private static ServiceAddress DeserializeServiceAddress(string json)
         {
@@ -400,13 +391,13 @@ private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
             {
                 return CreateDefaultAddress(); // Default fallback
             }
-
+        
             try
             {
                 var dto = JsonSerializer.Deserialize<ServiceAddressDto>(json, JsonOptions);
                 return dto != null 
-                    ? new ServiceAddress(dto.Street, dto.City, dto.State, dto.ZipCode, 
-                                       dto.ApartmentUnit, dto.Latitude, dto.Longitude)
+                    ? new ServiceAddress(dto.Street1, dto.Street2, dto.Street3, dto.City, dto.State, dto.ZipCode, 
+                                        dto.Latitude, dto.Longitude)
                     : CreateDefaultAddress(); // Safe fallback
             }
             catch (JsonException)
@@ -415,17 +406,17 @@ private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
             }
         }
 
-        private static EstimatedDuration CreateEstimatedDurationFromTicks(long ticks)
-        {
-            var timeSpan = TimeSpan.FromTicks(ticks);
-            return new EstimatedDuration(
-                (int)timeSpan.TotalHours, 
-                timeSpan.Minutes % 60);
-        }
-
+        // private static EstimatedDuration CreateEstimatedDurationFromTicks(long ticks)
+        // {
+        //     var timeSpan = TimeSpan.FromTicks(ticks);
+        //     return new EstimatedDuration(
+        //         (int)timeSpan.TotalHours, 
+        //         timeSpan.Minutes % 60);
+        // }
+        //
         private static ServiceAddress CreateDefaultAddress()
         {
-            return new ServiceAddress("Unknown", "Unknown", "IL", "00000");
+            return new ServiceAddress("Unknown", "Unknown", "Unknown", "Unknown", "IL", "00000");
         }
 
         
@@ -435,213 +426,6 @@ private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
     // ENTITY CONFIGURATIONS
     // ============================================================================
 
-    internal class JobConfiguration : IEntityTypeConfiguration<Job>
-    {
-        public void Configure(EntityTypeBuilder<Job> builder)
-        {
-	        builder.ToTable("Jobs", schema: "JobService")
-		        .ToTable(t => t.HasCheckConstraint("CK_Jobs_ScheduledDate_Future",
-			        "[ScheduledDate] IS NULL OR [ScheduledDate] >= [CreatedAt]"))
-		        .ToTable(t => t.HasCheckConstraint("CK_Jobs_CompletedDate_Future",
-			        "[CompletedDate] IS NULL OR [CompletedDate] >= [CreatedAt]"));
-
-            // Primary key
-            builder.HasKey(j => j.Id);
-
-            // Required string properties
-            builder.Property(j => j.CustomerName)
-                .IsRequired()
-                .HasMaxLength(200)
-                .HasComment("Name of the customer for this job");
-
-            builder.Property(j => j.Description)
-                .IsRequired()
-                .HasMaxLength(2000)
-                .HasComment("Detailed description of the work to be performed");
-
-            // Optional string properties
-            builder.Property(j => j.SpecialInstructions)
-                .IsRequired(false)
-                .HasMaxLength(1000)
-                .HasComment("Special instructions from customer or management");
-
-            // DateTime properties
-            builder.Property(j => j.RequestedDate)
-                .IsRequired()
-                .HasComment("Date requested by customer");
-
-            builder.Property(j => j.ScheduledDate)
-                .IsRequired(false)
-                .HasComment("Date scheduled for technician");
-
-            builder.Property(j => j.CompletedDate)
-                .IsRequired(false)
-                .HasComment("Date job was completed");
-
-            builder.Property(j => j.CreatedAt)
-                .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()")
-                .HasComment("Timestamp when job was created");
-
-            builder.Property(j => j.UpdatedAt)
-                .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()")
-                .HasComment("Timestamp when job was last updated");
-
-            // Configure child entity relationships
-            builder.HasMany(j => j.Requirements)
-                .WithOne()
-                .HasForeignKey("JobId")
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_JobRequirements_Job");
-
-            builder.HasMany(j => j.Notes)
-                .WithOne()
-                .HasForeignKey("JobId")
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_JobNotes_Job");
-
-            // Configure backing fields for collections
-            builder.Navigation(j => j.Requirements)
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasField("_requirements");
-
-            builder.Navigation(j => j.Notes)
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasField("_notes");
-
-            // Performance indexes
-            builder.HasIndex(j => j.TenantId)
-                .HasDatabaseName("IX_Jobs_TenantId");
-
-            builder.HasIndex(j => j.CustomerId)
-                .HasDatabaseName("IX_Jobs_CustomerId");
-
-            builder.HasIndex(j => j.AssignedTechnicianId)
-                .HasDatabaseName("IX_Jobs_AssignedTechnicianId");
-
-            builder.HasIndex(j => j.Status)
-                .HasDatabaseName("IX_Jobs_Status");
-
-            builder.HasIndex(j => j.Priority)
-                .HasDatabaseName("IX_Jobs_Priority");
-
-            builder.HasIndex(j => j.RequestedDate)
-                .HasDatabaseName("IX_Jobs_RequestedDate");
-
-            builder.HasIndex(j => j.ScheduledDate)
-                .HasDatabaseName("IX_Jobs_ScheduledDate");
-
-            builder.HasIndex(j => j.CreatedAt)
-                .HasDatabaseName("IX_Jobs_CreatedAt");
-
-            // Composite indexes for common query patterns
-            builder.HasIndex(j => new { j.TenantId, j.Status })
-                .HasDatabaseName("IX_Jobs_TenantId_Status");
-
-            builder.HasIndex(j => new { j.TenantId, j.CustomerId })
-                .HasDatabaseName("IX_Jobs_TenantId_CustomerId");
-
-            builder.HasIndex(j => new { j.TenantId, j.AssignedTechnicianId, j.ScheduledDate })
-                .HasDatabaseName("IX_Jobs_TenantId_TechnicianId_ScheduledDate");
-
-            // Ignore domain events (not persisted)
-            builder.Ignore(j => j.DomainEvents);
-
-            // Table constraints
-            //builder.HasCheckConstraint("CK_Jobs_ScheduledDate_Future", "[ScheduledDate] IS NULL OR [ScheduledDate] >= [CreatedAt]");
-            //builder.HasCheckConstraint("CK_Jobs_CompletedDate_Future", "[CompletedDate] IS NULL OR [CompletedDate] >= [CreatedAt]");
-        }
-    }
-
-    internal class JobRequirementConfiguration : IEntityTypeConfiguration<JobRequirement>
-    {
-        public void Configure(EntityTypeBuilder<JobRequirement> builder)
-        {
-            builder.ToTable("JobRequirements", schema: "JobService");
-
-            // Primary key
-            builder.HasKey(jr => new { jr.RequirementType, jr.Description, jr.IsRequired });
-
-            // Properties
-            builder.Property(jr => jr.Id)
-                .IsRequired()
-                .HasMaxLength(100)
-                .HasComment("Type of requirement (Equipment, Material, Skill, etc.)");
-
-            builder.Property(jr => jr.Description)
-                .IsRequired()
-                .HasMaxLength(500)
-                .HasComment("Detailed description of the requirement");
-
-            builder.Property(jr => jr.IsRequired)
-                .IsRequired()
-                .HasDefaultValue(true)
-                .HasComment("Whether this requirement is mandatory");
-
-            builder.Property(jr => jr.IsFulfilled)
-                .IsRequired()
-                .HasDefaultValue(false)
-                .HasComment("Whether this requirement has been fulfilled");
-
-            // Foreign key to Job (shadow property)
-            builder.Property<Guid>("JobId")
-                .IsRequired()
-                .HasComment("Foreign key to the Job");
-
-            // Indexes
-            builder.HasIndex("JobId")
-                .HasDatabaseName("IX_JobRequirements_JobId");
-
-            builder.HasIndex(jr => jr.RequirementType)
-                .HasDatabaseName("IX_JobRequirements_RequirementType");
-
-            builder.HasIndex(jr => new { jr.IsRequired, jr.IsFulfilled })
-                .HasDatabaseName("IX_JobRequirements_IsRequired_IsFulfilled");
-        }
-    }
-
-    internal class JobNoteConfiguration : IEntityTypeConfiguration<JobNote>
-    {
-        public void Configure(EntityTypeBuilder<JobNote> builder)
-        {
-            builder.ToTable("JobNotes", schema: "JobService");
-
-            // Primary key
-            builder.HasKey(jn => jn.Id);
-
-            // Properties
-            builder.Property(jn => jn.Author)
-                .IsRequired()
-                .HasMaxLength(200)
-                .HasComment("Author of the note (technician, customer, system, etc.)");
-
-            builder.Property(jn => jn.Content)
-                .IsRequired()
-                .HasMaxLength(2000)
-                .HasComment("Content of the note");
-
-            builder.Property(jn => jn.CreatedAt)
-                .IsRequired()
-                .HasDefaultValueSql("GETUTCDATE()")
-                .HasComment("Timestamp when note was created");
-
-            // Foreign key to Job (shadow property)
-            builder.Property<Guid>("JobId")
-                .IsRequired()
-                .HasComment("Foreign key to the Job");
-
-            // Indexes
-            builder.HasIndex("JobId")
-                .HasDatabaseName("IX_JobNotes_JobId");
-
-            builder.HasIndex(jn => jn.CreatedAt)
-                .HasDatabaseName("IX_JobNotes_CreatedAt");
-
-            builder.HasIndex(jn => jn.Author)
-                .HasDatabaseName("IX_JobNotes_Author");
-        }
-    }
 
     // ============================================================================
     // DTO CLASSES FOR JSON SERIALIZATION
@@ -649,14 +433,15 @@ private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
 
     internal record MoneyDto(decimal Amount, string Currency);
     
-    internal record ServiceTypeDto(string Category, string ServiceName, string Description);
+    //internal record ServiceTypeDto(string Category, string ServiceName, string Description);
     
     internal record ServiceAddressDto(
-        string Street, 
+        string Street1, 
+        string Street2,
+        string Street3,
         string City, 
         string State, 
         string ZipCode, 
-        string? ApartmentUnit, 
         decimal? Latitude, 
         decimal? Longitude);
 }

@@ -82,6 +82,7 @@ public class ProcessEstimateCommandHandler : IRequestHandler<ProcessEstimateComm
 	{
 		_logger.LogInformation("Queueing estimate: @{Estimate}", request.Estimate);
 
+		
 		var estimate = new EstimateReceivedEvent(
 			GuidHelper.NewId(),
 			GuidHelper.NewId(),

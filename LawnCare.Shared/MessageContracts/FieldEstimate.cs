@@ -17,11 +17,12 @@ public class FieldEstimate
 	public string CustomerEmail { get; set; }= string.Empty;
 	public DateTimeOffset ScheduledDate { get; set; }
 	public decimal EstimatedCost { get; set; }
+	public int EstimatedDuration { get; set; }
 	public string Description { get; set; }= string.Empty;
 	public List<JobServiceItem> Services { get; set; } = [];
 }
 
-public record JobServiceItem(string ServiceName, decimal Quantity, string Comment, decimal Price);
+public record JobServiceItem(string ServiceName, int Quantity, string Comment, decimal Price);
 
 public record ProcessCustomerCommand(Guid TenantId, Guid EstimateId, CustomerInfo Customer);
 public record CreateJobCommand(Guid TenantId, Guid EstimateId, Guid CustomerId, JobDetails Job);

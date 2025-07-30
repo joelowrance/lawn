@@ -4,36 +4,57 @@ namespace LawnCare.JobApi.Domain.ValueObjects;
 
 public class ServiceAddress : ValueObject
 {
-	public string Street { get; }
+	public string Street1 { get; }
+	public string Street2 { get; }
+	public string Street3 { get; }
 	public string City { get; }
 	public string State { get; }
 	public string ZipCode { get; }
-	public string? ApartmentUnit { get; }
 	public decimal? Latitude { get; }
 	public decimal? Longitude { get; }
 
-	public ServiceAddress(string street, string city, string state, string zipCode, 
-		string? apartmentUnit = null, decimal? latitude = null, decimal? longitude = null)
+	public ServiceAddress(string street1, string street2 , string street3, string city, string state, string zipCode 
+		, decimal? latitude = null, decimal? longitude = null)
 	{
-		Street = street ?? throw new ArgumentNullException(nameof(street));
+		Street1 = street1 ?? throw new ArgumentNullException(nameof(street1));
+		Street2 = street2;
+		Street3 = street3;
 		City = city ?? throw new ArgumentNullException(nameof(city));
 		State = state ?? throw new ArgumentNullException(nameof(state));
 		ZipCode = zipCode ?? throw new ArgumentNullException(nameof(zipCode));
-		ApartmentUnit = apartmentUnit;
 		Latitude = latitude;
 		Longitude = longitude;
 	}
 
-	public string FullAddress => ApartmentUnit != null 
-		? $"{Street}, {ApartmentUnit}, {City}, {State} {ZipCode}"
-		: $"{Street}, {City}, {State} {ZipCode}";
+	public string FullAddress
+	{
+		get
+		{
+			var add = Street1;
+			if (!string.IsNullOrWhiteSpace(Street2))
+			{
+				add += ", " + Street2;
+			}
+			
+			if (!string.IsNullOrWhiteSpace(Street3))
+			{
+				add += ", " + Street3;
+			}
+
+			add += $"{City}, {State} {ZipCode}";
+			return add;
+		}	
+	}
+	
+		
 
 	protected override IEnumerable<object> GetEqualityComponents()
 	{
-		yield return Street;
+		yield return Street1;
+		yield return Street2;
+		yield return Street3;
 		yield return City;
 		yield return State;
 		yield return ZipCode;
-		yield return ApartmentUnit ?? string.Empty;
 	}
 }

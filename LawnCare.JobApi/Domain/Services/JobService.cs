@@ -4,6 +4,9 @@ using LawnCare.JobApi.Domain.Entities;
 using LawnCare.JobApi.Domain.Enums;
 using LawnCare.JobApi.Domain.Repositories;
 using LawnCare.JobApi.Domain.ValueObjects;
+using LawnCare.Shared.MessageContracts;
+
+using JobServiceItem = LawnCare.Shared.MessageContracts.JobServiceItem;
 
 namespace LawnCare.JobApi.Domain.Services;
     public class JobApplicationService
@@ -22,50 +25,42 @@ namespace LawnCare.JobApi.Domain.Services;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<JobResponse> CreateJobAsync(CreateJobRequest request)
+        public async Task<JobResponse> CreateJobFromFieldEstimateAsync(FieldEstimate estimate)
         {
-            var tenantId = TenantId.From(request.TenantId);
-            var customerId = CustomerId.From(request.CustomerId);
+	        
+            var tenantId = TenantId.From(estimate.TenantId);
             
-            var address = new ServiceAddress(
-                request.Address.Street,
-                request.Address.City,
-                request.Address.State,
-                request.Address.ZipCode,
-                request.Address.ApartmentUnit,
-                request.Address.Latitude,
-                request.Address.Longitude
+            var  address = new ServiceAddress(
+	            estimate.CustomerAddress1,
+	            estimate.CustomerAddress2,
+	            estimate.CustomerAddress2,
+	            estimate.CustomerCity,
+	            estimate.CustomerState,
+	            estimate.CustomerZip
             );
+            
 
-            var serviceType = new ServiceType(
-                request.Service.Category,
-                request.Service.ServiceName,
-                request.Service.Description
-            );
-
-            var estimatedDuration = new EstimatedDuration(request.EstimatedHours, request.EstimatedMinutes);
-            var estimatedCost = new Money(request.EstimatedCost);
+            var estimatedDuration = new EstimatedDuration(estimate.EstimatedDuration);
+            var estimatedCost = new Money(estimate.EstimatedCost);
 
             var job = new Job(
-                tenantId,
-                customerId,
-                request.CustomerName,
-                address,
-                serviceType,
-                request.Description,
-                request.RequestedDate,
+	            tenantId,
+	            $"{estimate.CustomerFirstName} {estimate.CustomerLastName}",
+	            address,
+	            estimate.Description,
+                estimate.ScheduledDate,
                 estimatedDuration,
                 estimatedCost
             );
 
-            if (!string.IsNullOrEmpty(request.SpecialInstructions))
+            foreach (JobServiceItem item in estimate.Services)
             {
-                job.AddNote("Customer", request.SpecialInstructions);
+	            job.AddService(new Entities.JobServiceItem(item.ServiceName, item.Quantity, item.Comment, item.Price));
             }
 
             // Calculate priority using domain service
-            var priority = _jobDomainService.CalculatePriority(serviceType, request.RequestedDate);
-            job.UpdatePriority(priority);
+            //var priority = _jobDomainService.CalculatePriority(serviceType, request.RequestedDate);
+            job.UpdatePriority(JobPriority.Normal);
 
             await _jobRepository.AddAsync(job);
             await _unitOfWork.SaveChangesAsync();
@@ -106,22 +101,18 @@ namespace LawnCare.JobApi.Domain.Services;
             return new JobResponse(
                 job.JobId.Value,
                 job.TenantId.Value,
-                job.CustomerId.Value,
+                job.CustomerId?.Value,
                 job.CustomerName,
                 new JobAddressResponse(
-                    job.ServiceAddress.Street,
+                    job.ServiceAddress.Street1,
+                    job.ServiceAddress.Street2,
+                    job.ServiceAddress.Street3,
                     job.ServiceAddress.City,
                     job.ServiceAddress.State,
                     job.ServiceAddress.ZipCode,
-                    job.ServiceAddress.ApartmentUnit,
                     job.ServiceAddress.FullAddress,
-                    null,
-                    null
-                ),
-                new JobServiceResponse(
-                    job.ServiceType.Category,
-                    job.ServiceType.ServiceName,
-                    job.ServiceType.Description
+                    job.ServiceAddress.Latitude,
+                    job.ServiceAddress.Longitude
                 ),
                 job.Status.ToString(),
                 job.Priority.ToString(),
@@ -131,15 +122,15 @@ namespace LawnCare.JobApi.Domain.Services;
                 job.EstimatedCost.Amount,
                 "USD",
                 job.ActualCost?.Amount,
-                job.RequestedDate,
+                job.ScheduledDate,
                 job.ScheduledDate,
                 job.CompletedDate,
                 job.AssignedTechnicianId?.Value,
-                job.Requirements.Select(r => new JobRequirementResponse(
-                    r.RequirementType,
-                    r.Description,
-                    r.IsRequired,
-                    r.IsFulfilled
+                job.ServiceItems.Select(r => new JobServiceItemResponse(
+                    r.ServiceName,
+                    r.Quantity,
+                    r.Comment ?? string.Empty,
+                    r.Price
                 )).ToList(),
                 job.Notes.Select(n => new JobNoteResponse(n.Id,
 	                

@@ -7,17 +7,14 @@ public class EstimatedDuration : ValueObject
 	public TimeSpan Duration { get; }
 	public string Unit { get; }
 
-	public EstimatedDuration(int hours, int minutes = 0)
+	public EstimatedDuration(int hours)
 	{
-		if (hours < 0 || minutes < 0)
+		if (hours < 0 || hours > 40)
 			throw new ArgumentException("Duration cannot be negative");
 
-		Duration = new TimeSpan(hours, minutes, 0);
+		Duration = new TimeSpan(hours, 0, 0);
 		Unit = "hours";
 	}
-
-	public static EstimatedDuration FromHours(double hours) => 
-		new((int)hours, (int)((hours - (int)hours) * 60));
 
 	public double TotalHours => Duration.TotalHours;
 

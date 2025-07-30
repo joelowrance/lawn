@@ -5,99 +5,94 @@ using LawnCare.JobApi.Domain.DomainEvents;
 
 namespace LawnCare.JobApi.Domain.Entities;
 
+
+
 public class Job : AggregateRoot
 {
 	// Backing fields for EF Core access (private fields with public properties)
-	private readonly List<JobRequirement> _requirements = new();
+	private readonly List<JobServiceItem> _services = new();
 	private readonly List<JobNote> _notes = new();
         
-        // Properties with private setters for encapsulation
-        // Use null-forgiving operator for EF constructor, but these are never null in practice
-        public JobId JobId { get; private set; } = null!;
-        public TenantId TenantId { get; private set; } = null!;
-        public CustomerId CustomerId { get; private set; } = null!;
-        public string CustomerName { get; private set; } = null!;
-        public ServiceAddress ServiceAddress { get; private set; } = null!;
-        public ServiceType ServiceType { get; private set; } = null!;
-        public JobStatus Status { get; private set; }
-        public JobPriority Priority { get; private set; }
-        public string Description { get; private set; } = null!;
-        public string? SpecialInstructions { get; private set; } // Genuinely nullable
-        public EstimatedDuration EstimatedDuration { get; private set; } = null!;
-        public Money EstimatedCost { get; private set; } = null!;
-        public Money? ActualCost { get; private set; } // Genuinely nullable
-        public DateTime RequestedDate { get; private set; }
-        public DateTime? ScheduledDate { get; private set; } // Genuinely nullable
-        public DateTime? CompletedDate { get; private set; } // Genuinely nullable
-        public TechnicianId? AssignedTechnicianId { get; private set; } // Genuinely nullable
-        public DateTime CreatedAt { get; private set; }
-        public DateTime UpdatedAt { get; private set; }
+    // Properties with private setters for encapsulation
+    // Use null-forgiving operator for EF constructor, but these are never null in practice
+    public JobId JobId { get; private set; } = null!;
+    public TenantId TenantId { get; private set; } = null!;
+    public CustomerId? CustomerId { get; private set; } 
+    public string CustomerName { get; private set; }
+    public ServiceAddress ServiceAddress { get; private set; }
+    public JobStatus Status { get; private set; }
+    public JobPriority Priority { get; private set; }
+    public string Description { get; private set; }
+    public string? SpecialInstructions { get; private set; } // Genuinely nullable
+    public EstimatedDuration EstimatedDuration { get; private set; }
+    public Money EstimatedCost { get; private set; }
+    public Money? ActualCost { get; private set; } // Genuinely nullable
+    public DateTimeOffset? RequestedDate { get; private set; }
+    public DateTimeOffset? ScheduledDate { get; private set; } // Genuinely nullable
+    public DateTimeOffset? CompletedDate { get; private set; } // Genuinely nullable
+    public TechnicianId? AssignedTechnicianId { get; private set; } // Genuinely nullable
+    public DateTime CreatedAt { get; private set; }
+    public DateTime UpdatedAt { get; private set; }
 
-        // Read-only collections exposed as IReadOnlyList
-        public IReadOnlyList<JobRequirement> Requirements => _requirements.AsReadOnly();
-        public IReadOnlyList<JobNote> Notes => _notes.AsReadOnly();
+    
+    // Read-only collections exposed as IReadOnlyList
+    public IReadOnlyList<JobServiceItem> ServiceItems => _services.AsReadOnly();
+    public IReadOnlyList<JobNote> Notes => _notes.AsReadOnly();
+    
 
-        // CRITICAL: Private parameterless constructor for EF Core with nullable support
-        // EF Core needs this to create instances when loading from database
-        private Job()
-        {
-            // Use null-forgiving operator for properties that EF will populate
-            // These are required in the domain but EF will set them from the database
-            CustomerName = null!;
-            Description = null!;
-            ServiceAddress = null!;
-            ServiceType = null!;
-            EstimatedDuration = null!;
-            EstimatedCost = null!;
-            
-            // Initialize collections - these are never null
-            // (backing fields are already initialized above)
-            
-            // IMPORTANT: Don't initialize domain events here - we don't want events
-            // when loading from database, only when business operations occur
-        }
-	public Job(TenantId tenantId, CustomerId customerId, string customerName, 
-		ServiceAddress serviceAddress, ServiceType serviceType, 
-		string description, DateTime requestedDate, 
+    // CRITICAL: Private parameterless constructor for EF Core with nullable support
+    // EF Core needs this to create instances when loading from database
+    private Job()
+    {
+        // Use null-forgiving operator for properties that EF will populate
+        // These are required in the domain but EF will set them from the database
+        CustomerName = null!;
+        Description = null!;
+        ServiceAddress = null!;
+        EstimatedDuration = null!;
+        EstimatedCost = null!;
+        
+        // Initialize collections - these are never null
+        // (backing fields are already initialized above)
+        
+        // IMPORTANT: Don't initialize domain events here - we don't want events
+        // when loading from database, only when business operations occur
+    }
+    
+	public Job(
+		TenantId tenantId, 
+		string customerName, 
+		ServiceAddress serviceAddress, 
+		string description, 
+		DateTimeOffset requestedDate, 
 		EstimatedDuration estimatedDuration, Money estimatedCost)
 		: this()
 	{
-		ValidateCreationParameters(tenantId, customerId, customerName, serviceAddress, 
-			serviceType, description, estimatedDuration, estimatedCost);
-
+		
+		ArgumentNullException.ThrowIfNull(tenantId);
+		ArgumentNullException.ThrowIfNull(serviceAddress);
+		ArgumentNullException.ThrowIfNull(estimatedDuration);
+		ArgumentNullException.ThrowIfNull(estimatedCost);
+		if (string.IsNullOrWhiteSpace(description)) throw new ArgumentException("Description is required", nameof(description));
+		if (string.IsNullOrWhiteSpace(customerName)) throw new ArgumentException("Customer name is required", nameof(customerName));
 		
 		JobId = JobId.Create();
 		TenantId = tenantId ?? throw new ArgumentNullException(nameof(tenantId));
-		CustomerId = customerId ?? throw new ArgumentNullException(nameof(customerId));
 		CustomerName = customerName ?? throw new ArgumentNullException(nameof(customerName));
 		ServiceAddress = serviceAddress ?? throw new ArgumentNullException(nameof(serviceAddress));
-		ServiceType = serviceType ?? throw new ArgumentNullException(nameof(serviceType));
 		Description = description ?? throw new ArgumentNullException(nameof(description));
 		RequestedDate = requestedDate;
 		EstimatedDuration = estimatedDuration ?? throw new ArgumentNullException(nameof(estimatedDuration));
 		EstimatedCost = estimatedCost ?? throw new ArgumentNullException(nameof(estimatedCost));
-        
-		Status = JobStatus.Pending;
+
+		Status = JobStatus.New;
 		Priority = JobPriority.Normal;
 		CreatedAt = DateTime.UtcNow;
 		UpdatedAt = DateTime.UtcNow;
 
-		AddDomainEvent(new JobCreatedEvent(JobId, TenantId, CustomerId));
+		AddDomainEvent(new JobCreatedEvent(JobId, TenantId));
 	}
 	
-	private void ValidateCreationParameters(TenantId tenantId, CustomerId customerId, string customerName,
-		ServiceAddress serviceAddress, ServiceType serviceType,
-		string description, EstimatedDuration estimatedDuration, Money estimatedCost)
-	{
-			ArgumentNullException.ThrowIfNull(tenantId);
-			ArgumentNullException.ThrowIfNull(customerId);
-			ArgumentNullException.ThrowIfNull(serviceAddress);
-			ArgumentNullException.ThrowIfNull(serviceType);
-			ArgumentNullException.ThrowIfNull(estimatedDuration);
-			ArgumentNullException.ThrowIfNull(estimatedCost);
-			if (string.IsNullOrWhiteSpace(description)) throw new ArgumentException("Description is required", nameof(description));
-			if (string.IsNullOrWhiteSpace(customerName)) throw new ArgumentException("Customer name is required", nameof(customerName));
-		}
 
 	public void ScheduleJob(DateTime scheduledDate, TechnicianId technicianId)
 	{
@@ -113,6 +108,16 @@ public class Job : AggregateRoot
 		// Raise events for business operations
 		AddDomainEvent(new JobScheduledEvent(JobId, TenantId, scheduledDate, technicianId));
 	}
+
+	public void MarkJobAsPending(JobId jobId, TenantId tenantId, CustomerId customerId)
+	{
+		Status = JobStatus.Pending;
+		CustomerId = customerId;
+		UpdatedAt = DateTime.UtcNow;
+		
+		AddDomainEvent(new JobPending(JobId, TenantId, CustomerId));;
+	}
+		
 
 	public void StartJob()
 	{
@@ -154,12 +159,12 @@ public class Job : AggregateRoot
 		AddDomainEvent(new JobCancelledEvent(JobId, TenantId, reason));
 	}
 
-	public void AddRequirement(JobRequirement requirement)
+	public void AddService(JobServiceItem jobService)
 	{
-		if (requirement == null)
-			throw new ArgumentNullException(nameof(requirement));
+		if (jobService == null)
+			throw new ArgumentNullException(nameof(jobService));
 
-		_requirements.Add(requirement);
+		_services.Add(jobService);
 		UpdatedAt = DateTime.UtcNow;
 	}
 
