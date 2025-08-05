@@ -17,7 +17,7 @@ namespace JobService.Infrastructure.Persistence
     {
 	    
 	    // JSON options for consistent serialization
-	    private static readonly JsonSerializerOptions JsonOptions = new()
+	    public static readonly JsonSerializerOptions JsonOptions = new()
 	    {
 		    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
 		    WriteIndented = false,
@@ -49,12 +49,10 @@ namespace JobService.Infrastructure.Persistence
             _logger.LogDebug("Configuring Job domain model");
 
             // Apply entity configurations
-            modelBuilder.ApplyConfiguration(new JobConfiguration());
-            modelBuilder.ApplyConfiguration(new JobServiceItemConfiguration());
-            modelBuilder.ApplyConfiguration(new JobNoteConfiguration());
-
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(JobDbContext).Assembly);
+            
             // Configure value object conversions
-            ConfigureValueObjectConversions(modelBuilder);
+            //ConfigureValueObjectConversions(modelBuilder);
 
             // Apply global query filters for tenant isolation
             ApplyGlobalFilters(modelBuilder);
@@ -109,102 +107,104 @@ namespace JobService.Infrastructure.Persistence
         
          
 	
-private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
-        {
-            // JobId conversion
-            var jobIdConverter = new ValueConverter<JobId, Guid>(
-                v => v.Value,
-                v => JobId.From(v));
-
-            // TenantId conversion
-            var tenantIdConverter = new ValueConverter<TenantId, Guid>(
-                v => v.Value,
-                v => TenantId.From(v));
-
-            // CustomerId conversion
-            var customerIdConverter = new ValueConverter<CustomerId?, Guid?>(
-                v => v != null ? v.Value : null,
-                v =>  v.HasValue ? CustomerId.From(v.Value) : null);
-
-            // TechnicianId conversion (nullable)
-            var technicianIdConverter = new ValueConverter<TechnicianId?, Guid?>(
-                v => v != null ? v.Value : null,
-                v => v.HasValue ? TechnicianId.From(v.Value) : null);
-
-            // Money conversion - store as JSON
-            var moneyConverter = new ValueConverter<Money, string>(
-                v => JsonSerializer.Serialize(new MoneyDto(v.Amount, v.Currency), JsonOptions),
-                v => DeserializeMoney(v));
-
-            // Nullable Money conversion
-            var nullableMoneyConverter = new ValueConverter<Money?, string?>(
-                v => v != null ? JsonSerializer.Serialize(new MoneyDto(v.Amount, v.Currency), JsonOptions) : null,
-                v => DeserializeNullableMoney(v));
-
-            // EstimatedDuration conversion - store as TimeSpan ticks
-            // var estimatedDurationConverter = new ValueConverter<EstimatedDuration, long>(
-            //     v => v.Duration.Ticks,
-            //     v => new EstimatedDuration((int)TimeSpan.FromTicks(v).TotalHours, 
-            //                              (int)TimeSpan.FromTicks(v).Minutes % 60));
-
-            // ServiceType conversion - store as JSON
-            // var serviceTypeConverter = new ValueConverter<ServiceType, string>(
-            //     v => JsonSerializer.Serialize(new ServiceTypeDto(v.Category, v.ServiceName, v.Description), JsonOptions),
-            //     v => DeserializeServiceType(v));
-
-            // ServiceAddress conversion - store as JSON
-            var serviceAddressConverter = new ValueConverter<ServiceAddress, string>(
-                v => JsonSerializer.Serialize(new ServiceAddressDto(
-                    v.Street1, v.Street2, v.Street3, v.City, v.State, v.ZipCode, v.Latitude, v.Longitude), JsonOptions),
-                v => DeserializeServiceAddress(v));
-
-            // Apply conversions to Job entity
-            modelBuilder.Entity<Job>(entity =>
-            {
-                entity.Property(e => e.Id)
-                    .HasConversion(jobIdConverter)
-                    .ValueGeneratedNever(); // We generate IDs in domain
-
-                entity.Property(e => e.TenantId)
-                    .HasConversion(tenantIdConverter)
-                    .IsRequired();
-
-                entity.Property(e => e.CustomerId)
-	                .HasConversion(customerIdConverter);
-                    
-
-                entity.Property(e => e.AssignedTechnicianId)
-                    .HasConversion(technicianIdConverter);
-
-                entity.Property(e => e.EstimatedCost)
-                    .HasConversion(moneyConverter)
-                    .HasColumnType("nvarchar(100)")
-                    .IsRequired();
-
-                entity.Property(e => e.ActualCost)
-                    .HasConversion(nullableMoneyConverter)
-                    .HasColumnType("nvarchar(100)");
-
-                entity.Property(e => e.EstimatedDuration)
-                    .IsRequired();
-
-                entity.Property(e => e.ServiceAddress)
-                    .HasConversion(serviceAddressConverter)
-                    .HasColumnType("nvarchar(1000)")
-                    .IsRequired();
-
-                // Enum conversions
-                entity.Property(e => e.Status)
-                    .HasConversion<string>()
-                    .HasMaxLength(50)
-                    .IsRequired();
-
-                entity.Property(e => e.Priority)
-                    .HasConversion<string>()
-                    .HasMaxLength(50)
-                    .IsRequired();
-            });
-        }
+	// private void ConfigureValueObjectConversions(ModelBuilder modelBuilder)
+ //    {
+ //        // JobId conversion
+ //        // var jobIdConverter = new ValueConverter<JobId, Guid>(
+ //        //     v => v.Value,
+ //        //     v => JobId.From(v));
+ //
+ //        // TenantId conversion
+ //        // var tenantIdConverter = new ValueConverter<TenantId, Guid>(
+ //        //     v => v.Value,
+ //        //     v => TenantId.From(v));
+ //
+ //        // CustomerId conversion
+ //        // var customerIdConverter = new ValueConverter<CustomerId?, Guid?>(
+ //        //     v => v != null ? v.Value : null,
+ //        //     v =>  v.HasValue ? CustomerId.From(v.Value) : null);
+ //        //
+ //        // // TechnicianId conversion (nullable)
+ //        // var technicianIdConverter = new ValueConverter<TechnicianId?, Guid?>(
+ //        //     v => v != null ? v.Value : null,
+ //        //     v => v.HasValue ? TechnicianId.From(v.Value) : null);
+ //
+ //        // // Money conversion - store as JSON
+ //        // var moneyConverter = new ValueConverter<Money, string>(
+ //        //     v => JsonSerializer.Serialize(new MoneyDto(v.Amount, v.Currency), JsonOptions),
+ //        //     v => DeserializeMoney(v));
+ //        //
+ //        // // Nullable Money conversion
+ //        // var nullableMoneyConverter = new ValueConverter<Money?, string?>(
+ //        //     v => v != null ? JsonSerializer.Serialize(new MoneyDto(v.Amount, v.Currency), JsonOptions) : null,
+ //        //     v => DeserializeNullableMoney(v));
+ //        //
+ //        // // EstimatedDuration conversion - store as TimeSpan ticks
+ //        // var estimatedDurationConverter = new ValueConverter<EstimatedDuration, long>(
+ //        //     v => v.Duration.Ticks,
+ //        //     v => new EstimatedDuration((int)v));
+ //
+ //        // ServiceType conversion - store as JSON
+ //        // var serviceTypeConverter = new ValueConverter<ServiceType, string>(
+ //        //     v => JsonSerializer.Serialize(new ServiceTypeDto(v.Category, v.ServiceName, v.Description), JsonOptions),
+ //        //     v => DeserializeServiceType(v));
+ //
+ //        // ServiceAddress conversion - store as JSON
+ //        // var serviceAddressConverter = new ValueConverter<ServiceAddress, string>(
+ //        //     v => JsonSerializer.Serialize(new ServiceAddressDto(
+ //        //         v.Street1, v.Street2, v.Street3, v.City, v.State, v.ZipCode, v.Latitude, v.Longitude), JsonOptions),
+ //        //     v => DeserializeServiceAddress(v));
+ //        
+ //        
+ //
+ //        // Apply conversions to Job entity
+ //        // modelBuilder.Entity<Job>(entity =>
+ //        // {
+ //        //     // entity.Property(e => e.JobId)
+ //        //     //     .HasConversion(jobIdConverter)
+ //        //     //     .ValueGeneratedNever(); // We generate IDs in domain
+ //        //
+ //        //     // entity.Property(e => e.TenantId)
+ //        //     //     .HasConversion(tenantIdConverter)
+ //        //     //     .IsRequired();
+ //        //
+ //        //     // entity.Property(e => e.CustomerId)
+ //        //     //     .HasConversion(customerIdConverter);
+ //        //         
+ //        //
+ //        //     // entity.Property(e => e.AssignedTechnicianId)
+ //        //     //     .HasConversion(technicianIdConverter);
+ //        //     //
+ //        //     // entity.Property(e => e.EstimatedCost)
+ //        //     //     .HasConversion(moneyConverter)
+ //        //     //     .HasColumnType("nvarchar(100)")
+ //        //     //     .IsRequired();
+ //        //     //
+ //        //     // entity.Property(e => e.ActualCost)
+ //        //     //     .HasConversion(nullableMoneyConverter)
+ //        //     //     .HasColumnType("nvarchar(100)");
+ //        //     //
+ //        //     // entity.Property(e => e.EstimatedDuration)
+	//        //     //  .HasConversion(estimatedDurationConverter)
+ //        //     //     .IsRequired();
+ //        //
+ //        //     // entity.Property(e => e.ServiceAddress)
+ //        //     //     .HasConversion(serviceAddressConverter)
+ //        //     //     .HasColumnType("nvarchar(1000)")
+ //        //     //     .IsRequired();
+ //        //     //
+ //        //     // // Enum conversions
+ //        //     // entity.Property(e => e.Status)
+ //        //     //     .HasConversion<string>()
+ //        //     //     .HasMaxLength(50)
+ //        //     //     .IsRequired();
+ //        //     //
+ //        //     // entity.Property(e => e.Priority)
+ //        //     //     .HasConversion<string>()
+ //        //     //     .HasMaxLength(50)
+ //        //     //     .IsRequired();
+ //        // });
+ //    }
 
         private void ApplyGlobalFilters(ModelBuilder modelBuilder)
         {

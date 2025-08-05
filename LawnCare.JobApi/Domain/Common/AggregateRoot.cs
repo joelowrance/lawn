@@ -1,6 +1,6 @@
 namespace LawnCare.JobApi.Domain.Common
 {
-	public abstract class AggregateRoot : Entity
+	public abstract class AggregateRoot 
 	{
 		private readonly List<IDomainEvent> _domainEvents = new();
 

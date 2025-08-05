@@ -30,7 +30,7 @@ internal class JobNoteConfiguration : IEntityTypeConfiguration<JobNote>
 			.HasDefaultValueSql("GETUTCDATE()")
 			.HasComment("Timestamp when note was created");
 
-		// Foreign key to Job (shadow property)
+		// Foreign key to Job (shadow property) - using raw Guid
 		builder.Property<Guid>("JobId")
 			.IsRequired()
 			.HasComment("Foreign key to the Job");

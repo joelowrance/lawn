@@ -1,12 +1,22 @@
 using MassTransit;
+using MassTransit.Mediator;
 using MediatR;
 using FluentValidation;
 
+using JobService.Infrastructure.Persistence;
+
+using LawnCare.JobApi.Domain.Common;
+using LawnCare.JobApi.Domain.Repositories;
+using LawnCare.JobApi.Domain.Services;
+using LawnCare.JobApi.Infrastructure.Database;
 using LawnCare.Shared;
+using LawnCare.Shared.EntityFramework;
 using LawnCare.Shared.MessageContracts;
 using LawnCare.Shared.OpenTelemetry;
 using LawnCare.Shared.Pipelines;
 using LawnCare.Shared.ProjectSetup;
+
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -30,10 +40,27 @@ builder.Services.AddMassTransit(x =>
 		configuration.ConfigureEndpoints(context);
 	});
 });
+
+// Register MassTransit.Mediator
+builder.Services.AddMediator(cfg =>
+{
+	cfg.AddConsumers(typeof(Program).Assembly);
+});
+
 builder.Services.AddSingleton<IActivityScope, ActivityScope>();
 builder.Services.AddSingleton<CommandHandlerMetrics>();
 builder.Services.AddSingleton<QueryHandlerMetrics>();
-
+builder.Services.AddTransient<IJobApplicationService, JobApplicationService>();
+builder.Services.AddTransient<JobDomainService,JobDomainService>();
+builder.Services.AddTransient<IJobRepository, JobRepository>();
+builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
+builder.Services.AddDbContext<JobDbContext>(dbContextOptionsBuilder =>
+{
+	dbContextOptionsBuilder.UseNpgsql(
+			builder.Configuration.GetConnectionString("job-connection"))
+		.UseSnakeCaseNamingConvention();
+});
+builder.Services.AddMigration<JobDbContext>();
 
 
 var app = builder.Build();
@@ -47,7 +74,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-app.MapPost("/estimate", async (IMediator mediator, FieldEstimate estimate) =>
+app.MapPost("/estimate", async (MediatR.IMediator mediator, FieldEstimate estimate) =>
 {
 	await mediator.Send(new ProcessEstimateCommand(estimate));
 	// needs a better result than just a status code
@@ -68,24 +95,31 @@ public record ProcessEstimateCommand(FieldEstimate Estimate) : IRequest;
 
 public class ProcessEstimateCommandHandler : IRequestHandler<ProcessEstimateCommand>
 {
-	
-	ILogger<ProcessEstimateCommandHandler> _logger;
-	IPublishEndpoint _publishEndpoint;
+	readonly ILogger<ProcessEstimateCommandHandler> _logger;
+	readonly IPublishEndpoint _publishEndpoint;
+	private readonly IJobApplicationService  _jobApplicationService;
 
-	public ProcessEstimateCommandHandler(ILogger<ProcessEstimateCommandHandler> logger, IPublishEndpoint publishEndpoint)
+	public ProcessEstimateCommandHandler(
+		ILogger<ProcessEstimateCommandHandler> logger, 
+		IPublishEndpoint publishEndpoint, 
+		IJobApplicationService jobApplicationService)
 	{
 		_logger = logger;
 		_publishEndpoint = publishEndpoint;
+		_jobApplicationService = jobApplicationService;
 	}
 
 	public async Task Handle(ProcessEstimateCommand request, CancellationToken cancellationToken)
 	{
-		_logger.LogInformation("Queueing estimate: @{Estimate}", request.Estimate);
-
+		var job = await _jobApplicationService.CreateJobFromFieldEstimateAsync(request.Estimate);
+		
+		_logger.LogInformation("Created job {JobId}", job.Id);
+		
+		_logger.LogInformation("Queueing estimate: @{Estimate}", request.Estimate);		
 		
 		var estimate = new EstimateReceivedEvent(
-			GuidHelper.NewId(),
-			GuidHelper.NewId(),
+			job.TenantId,
+			job.Id,
 			new CustomerInfo
 			(
 				request.Estimate.CustomerEmail,

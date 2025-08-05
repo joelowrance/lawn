@@ -9,8 +9,17 @@ using LawnCare.Shared.MessageContracts;
 using JobServiceItem = LawnCare.Shared.MessageContracts.JobServiceItem;
 
 namespace LawnCare.JobApi.Domain.Services;
-    public class JobApplicationService
-    {
+
+public interface IJobApplicationService
+{
+	Task<JobResponse> CreateJobFromFieldEstimateAsync(FieldEstimate estimate);
+	Task<JobResponse?> GetJobAsync(Guid jobId, Guid tenantId);
+	Task<List<JobResponse>> GetJobsByTenantAsync(Guid tenantId, JobStatus? status = null);
+	Task<bool> ScheduleJobAsync(Guid jobId, Guid tenantId, DateTime scheduledDate, Guid technicianId);
+}
+
+public class JobApplicationService : IJobApplicationService
+{
         private readonly IJobRepository _jobRepository;
         private readonly JobDomainService _jobDomainService;
         private readonly IUnitOfWork _unitOfWork;

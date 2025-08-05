@@ -1,4 +1,4 @@
-﻿using LawnCare.JobApi.Domain.Enums;
+using LawnCare.JobApi.Domain.Enums;
 using LawnCare.JobApi.Domain.ValueObjects;
 using LawnCare.JobApi.Domain.Common;
 using LawnCare.JobApi.Domain.DomainEvents;
@@ -142,7 +142,6 @@ public class Job : AggregateRoot
 		ActualCost = actualCost;
 		CompletedDate = completedAt;
 		UpdatedAt = completedAt;
-
 		var actualDuration = CalculateActualDuration();
 		AddDomainEvent(new JobCompletedEvent(JobId, TenantId, actualCost));
 	}

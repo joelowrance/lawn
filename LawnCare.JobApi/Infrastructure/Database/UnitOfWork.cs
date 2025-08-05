@@ -9,7 +9,7 @@ namespace LawnCare.JobApi.Infrastructure.Database;
 public class UnitOfWork : IUnitOfWork
 {
 	private readonly JobDbContext _context;
-	private readonly IMediator _mediator;
+	private readonly MassTransit.Mediator.IMediator _mediator;
 	private readonly ILogger<UnitOfWork> _logger;
 
 	public UnitOfWork(JobDbContext context, 
