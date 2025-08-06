@@ -77,8 +77,8 @@ namespace LawnCare.JobApi.Application.DTOs
 		Guid? AssignedTechnicianId,
 		IEnumerable<JobServiceItemResponse> ServiceItems,
 		IEnumerable<JobNoteResponse> Notes,
-		DateTime CreatedAt,
-		DateTime UpdatedAt
+		DateTimeOffset CreatedAt,
+		DateTimeOffset UpdatedAt
 	);
 
 
@@ -149,7 +149,7 @@ namespace LawnCare.JobApi.Application.DTOs
 	    Guid Id,
 	    string Author,
 	    string Content,
-	    DateTime CreatedAt
+	    DateTimeOffset CreatedAt
     );
     
     // public record UpdateJobRequest(

@@ -1,4 +1,5 @@
 ﻿using LawnCare.JobApi.Domain.Entities;
+using LawnCare.JobApi.Domain.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -40,13 +41,16 @@ internal class JobServiceItemConfiguration : IEntityTypeConfiguration<JobService
 			.HasDefaultValue(false)
 			.HasComment("Whether this service has been fulfilled");
 
-		// Foreign key to Job - using the JobId.Value Guid
-		builder.Property<Guid>("JobId")
+		// Foreign key to Job using JobId value object
+		builder.Property(js => js.JobId)
+			.HasConversion(
+				v => v!.Value,
+				v => JobId.From(v))
 			.IsRequired()
-			.HasComment("Foreign key to the Job's JobId.Value");
+			.HasComment("Foreign key to the Job");
 
 		// Indexes
-		builder.HasIndex("JobId")
+		builder.HasIndex(js => js.JobId)
 			.HasDatabaseName("IX_JobServiceItems_JobId");
 
 		builder.HasIndex(js => js.ServiceName)

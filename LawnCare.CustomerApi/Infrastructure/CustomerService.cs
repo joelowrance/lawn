@@ -29,7 +29,7 @@ namespace LawnCare.CustomerApi.Infrastructure
 		{
 			try
 			{
-				_logger.LogInformation("Processing customer with email {Email} for tenant {TenantId}", 
+				  _logger.LogInformation("Processing customer with email {Email} for tenant {TenantId}", 
 					command.Customer.Email, command.TenantId);
 
 				// Check if the customer exists

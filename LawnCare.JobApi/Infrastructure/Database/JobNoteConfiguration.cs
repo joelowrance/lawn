@@ -1,7 +1,9 @@
 ﻿using LawnCare.JobApi.Domain.Entities;
+using LawnCare.JobApi.Domain.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace LawnCare.JobApi.Infrastructure.Database;
 
@@ -27,16 +29,22 @@ internal class JobNoteConfiguration : IEntityTypeConfiguration<JobNote>
 
 		builder.Property(jn => jn.CreatedAt)
 			.IsRequired()
-			.HasDefaultValueSql("GETUTCDATE()")
+			.HasDefaultValueSql("CURRENT_TIMESTAMP")
 			.HasComment("Timestamp when note was created");
 
-		// Foreign key to Job (shadow property) - using raw Guid
-		builder.Property<Guid>("JobId")
+		// Configure JobId conversion
+		var jobIdConverter = new ValueConverter<JobId?, Guid?>(
+			v => v != null ? v.Value : null,
+			v => v.HasValue ? JobId.From(v.Value) : null);
+
+		// Foreign key to Job using JobId property
+		builder.Property(jn => jn.JobId)
+			.HasConversion(jobIdConverter)
 			.IsRequired()
 			.HasComment("Foreign key to the Job");
 
 		// Indexes
-		builder.HasIndex("JobId")
+		builder.HasIndex(jn => jn.JobId)
 			.HasDatabaseName("IX_JobNotes_JobId");
 
 		builder.HasIndex(jn => jn.CreatedAt)

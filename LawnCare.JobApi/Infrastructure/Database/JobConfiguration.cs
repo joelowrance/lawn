@@ -46,13 +46,16 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
 	    
         builder.ToTable("Jobs", schema: "JobService")
 	        .ToTable(t => t.HasCheckConstraint("CK_Jobs_ScheduledDate_Future",
-		        "[ScheduledDate] IS NULL OR [ScheduledDate] >= [CreatedAt]"))
+		        "\"scheduled_date\" IS NULL OR \"scheduled_date\" >= \"created_at\""))
 	        .ToTable(t => t.HasCheckConstraint("CK_Jobs_CompletedDate_Future",
-		        "[CompletedDate] IS NULL OR [CompletedDate] >= [CreatedAt]"));
+		        "\"completed_date\" IS NULL OR \"completed_date\" >= \"created_at\""));
 
+
+        
         // Primary key
         builder.HasKey(j => j.JobId);
         builder.Property(j => j.JobId)
+        	        .HasColumnName("id")
 	        .ValueGeneratedNever() // We generate IDs in domain
 	        .HasConversion(
 		        v => v.Value,
@@ -83,7 +86,7 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
         
         builder.Property(e => e.ActualCost)
 	        .HasConversion(nullableMoneyConverter)
-	        .HasColumnType("nvarchar(100)");
+	        .HasColumnType("text");
 
         builder.Property(e => e.EstimatedDuration)
 	        .HasConversion(estimatedDurationConverter)
@@ -91,12 +94,12 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
         
         builder.Property(e => e.EstimatedCost)
 	        .HasConversion(moneyConverter)
-	        .HasColumnType("nvarchar(100)")
+	        .HasColumnType("text")
 	        .IsRequired();
         
         builder.Property(e => e.ServiceAddress)
 	        .HasConversion(serviceAddressConverter)
-	        .HasColumnType("nvarchar(1000)")
+	        .HasColumnType("text")
 	        .IsRequired();
 
         // Enum conversions
@@ -131,12 +134,12 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
 
         builder.Property(j => j.CreatedAt)
             .IsRequired()
-            .HasDefaultValueSql("GETUTCDATE()")
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
             .HasComment("Timestamp when job was created");
 
         builder.Property(j => j.UpdatedAt)
             .IsRequired()
-            .HasDefaultValueSql("GETUTCDATE()")
+            .HasDefaultValueSql("CURRENT_TIMESTAMP")
             .HasComment("Timestamp when job was last updated");
 
         // Configure child entity relationships

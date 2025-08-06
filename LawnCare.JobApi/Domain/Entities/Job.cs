@@ -31,8 +31,8 @@ public class Job : AggregateRoot
     public DateTimeOffset? ScheduledDate { get; private set; } // Genuinely nullable
     public DateTimeOffset? CompletedDate { get; private set; } // Genuinely nullable
     public TechnicianId? AssignedTechnicianId { get; private set; } // Genuinely nullable
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
+    public DateTimeOffset UpdatedAt { get; private set; }
 
     
     // Read-only collections exposed as IReadOnlyList
@@ -163,6 +163,15 @@ public class Job : AggregateRoot
 		if (jobService == null)
 			throw new ArgumentNullException(nameof(jobService));
 
+		jobService.JobId = this.JobId; // Set the JobId
+		_services.Add(jobService);
+		UpdatedAt = DateTime.UtcNow;
+	}
+
+	public void AddService(string serviceName, int quantity, string? comment, decimal price)
+	{
+		var jobService = new JobServiceItem(serviceName, quantity, comment, price);
+		jobService.JobId = this.JobId; // Set the JobId
 		_services.Add(jobService);
 		UpdatedAt = DateTime.UtcNow;
 	}
@@ -170,6 +179,7 @@ public class Job : AggregateRoot
 	public void AddNote(string author, string content)
 	{
 		var note = new JobNote(author, content);
+		note.JobId = this.JobId; // Set the JobId
 		_notes.Add(note);
 		UpdatedAt = DateTime.UtcNow;
 	}

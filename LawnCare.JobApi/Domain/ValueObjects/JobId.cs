@@ -1,4 +1,5 @@
 using LawnCare.JobApi.Domain.Common;
+using LawnCare.Shared;
 
 namespace LawnCare.JobApi.Domain.ValueObjects;
 
@@ -11,7 +12,7 @@ public class JobId : ValueObject
 		Value = value;
 	}
 
-	public static JobId Create() => new(Guid.NewGuid());
+	public static JobId Create() => new(GuidHelper.NewId());
         
 	public static JobId From(Guid value) => new(value);
 
