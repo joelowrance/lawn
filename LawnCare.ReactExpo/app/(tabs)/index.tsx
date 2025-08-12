@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, Pressable } from 'react-native';
+import { router } from 'expo-router';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -51,6 +52,15 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
       </ThemedView>
+      <ThemedView style={styles.stepContainer}>
+        <ThemedText type="subtitle">Data Entry</ThemedText>
+        <Pressable
+          style={styles.linkButton}
+          onPress={() => router.push('/(tabs)/data-entry')}
+        >
+          <ThemedText type="link">Go to Data Entry Screen</ThemedText>
+        </Pressable>
+      </ThemedView>
     </ParallaxScrollView>
   );
 }
@@ -71,5 +81,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     position: 'absolute',
+  },
+  linkButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+    borderRadius: 8,
+    alignSelf: 'flex-start',
   },
 });

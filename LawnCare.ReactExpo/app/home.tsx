@@ -4,6 +4,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { useAuth } from '@/contexts/AuthContext';
 import { TouchableOpacity } from 'react-native';
+import { router } from 'expo-router';
 import MenuBar from '@/components/MenuBar';
 
 export default function HomeScreen() {
@@ -54,6 +55,16 @@ export default function HomeScreen() {
               <ThemedText style={styles.actionTitle}>Account Settings</ThemedText>
               <ThemedText style={styles.actionDescription}>
                 Manage your profile and preferences
+              </ThemedText>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.actionCard}
+              onPress={() => router.push('/(tabs)/data-entry')}
+            >
+              <ThemedText style={styles.actionTitle}>Data Entry</ThemedText>
+              <ThemedText style={styles.actionDescription}>
+                Enter and manage data records
               </ThemedText>
             </TouchableOpacity>
           </View>
