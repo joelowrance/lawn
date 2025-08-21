@@ -11,7 +11,8 @@ var rabbitMq = builder.AddRabbitMQ("rabbitmq", rabbitUser, rabbitPass, 5672)
 	.WithLifetime(ContainerLifetime.Persistent) //stays around even when the app host stops.
 	.WithDataBindMount(@"c:\temp\LawnCare-RabbitMq", isReadOnly: false)
 	.WithManagementPlugin( port: 15672 );
-	
+
+var mailDev = builder.AddMailDev("maildev", 1080, 25);
 
 // //TODO:  figure out health check
 // //TODO:  figure out persistent port (.WithManagementPlugin(port: 99898);?
