@@ -9,11 +9,15 @@ public class EstimatedDuration : ValueObject
 
 	public EstimatedDuration(int hours)
 	{
-		if (hours < 0 || hours > 40)
-			throw new ArgumentException("Duration cannot be negative");
-
-		Duration = new TimeSpan(hours, 0, 0);
+		//TODO:  fuck
+		Duration =new TimeSpan(8, 0, 0);
 		Unit = "hours";
+		
+		// if (hours < 0 || hours > 40)
+		// 	throw new ArgumentException("Duration cannot be negative");
+		//
+		// Duration = new TimeSpan(hours, 0, 0);
+		// Unit = "hours";
 	}
 
 	public double TotalHours => Duration.TotalHours;

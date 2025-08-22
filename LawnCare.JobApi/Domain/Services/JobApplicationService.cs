@@ -16,22 +16,25 @@ public interface IJobApplicationService
 	Task<JobResponse?> GetJobAsync(Guid jobId, Guid tenantId);
 	Task<List<JobResponse>> GetJobsByTenantAsync(Guid tenantId, JobStatus? status = null);
 	Task<bool> ScheduleJobAsync(Guid jobId, Guid tenantId, DateTime scheduledDate, Guid technicianId);
+	Task<JobResponse> SetPending(Guid jobId, Guid customerId);
 }
 
 public class JobApplicationService : IJobApplicationService
 {
         private readonly IJobRepository _jobRepository;
-        private readonly JobDomainService _jobDomainService;
+        private readonly JobDomainService _jobDomainService; 
         private readonly IUnitOfWork _unitOfWork;
+        ILogger<JobApplicationService> _logger;
 
         public JobApplicationService(
             IJobRepository jobRepository,
             JobDomainService jobDomainService,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork, ILogger<JobApplicationService> logger)
         {
             _jobRepository = jobRepository;
             _jobDomainService = jobDomainService;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<JobResponse> CreateJobFromFieldEstimateAsync(FieldEstimate estimate)
@@ -77,6 +80,10 @@ public class JobApplicationService : IJobApplicationService
             return MapToJobResponse(job);
         }
 
+        
+        
+        
+
         public async Task<JobResponse?> GetJobAsync(Guid jobId, Guid tenantId)
         {
             var job = await _jobRepository.GetByIdAsync(JobId.From(jobId), TenantId.From(tenantId));
@@ -103,6 +110,30 @@ public class JobApplicationService : IJobApplicationService
             await _unitOfWork.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<JobResponse> SetPending(Guid jobId, Guid customerId)
+        {
+	        try
+	        {
+		        //TODO:  figure out this tenant shit.  Job will always be unique
+		        var job = await _jobRepository.GetByIdAsync(JobId.From(jobId), TenantId.From(Guid.Empty));
+
+		        //TODO:  better exceptions
+		        job = job ?? throw new ApplicationException("Job not found");
+		        job.ChangeStatus(JobStatus.Pending);
+
+		        await _unitOfWork.SaveChangesAsync();
+		        return MapToJobResponse(job);
+
+
+	        }
+	        catch (Exception wtf)
+	        {
+		        _logger.LogCritical(wtf, "Problem with something");;
+	        }
+
+	        return null!;
         }
 
         private static JobResponse MapToJobResponse(Job job)

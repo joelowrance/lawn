@@ -1,4 +1,5 @@
 ﻿using LawnCare.JobApi.Domain.Common;
+using LawnCare.JobApi.Domain.Enums;
 using LawnCare.JobApi.Domain.ValueObjects;
 
 namespace LawnCare.JobApi.Domain.DomainEvents;
@@ -16,6 +17,9 @@ public record JobStartedEvent(JobId JobId, TenantId TenantId, TechnicianId Techn
 	: IDomainEvent;
 
 public record JobCompletedEvent(JobId JobId, TenantId TenantId, Money ActualCost)
+	: IDomainEvent;
+
+public record JobStatusChangedEvent(JobId JobId, JobStatus NewStatus)
 	: IDomainEvent;
 
 public record JobCancelledEvent(JobId JobId, TenantId TenantId, string Reason)

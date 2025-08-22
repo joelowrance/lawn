@@ -44,7 +44,7 @@ namespace LawnCare.CustomerApi.Infrastructure
 					// Publish CustomerFoundEvent
 					await _publishEndpoint.Publish(new LawnCare.Shared.MessageContracts.CustomerFoundEvent(
 						command.TenantId,
-						command.EstimateId,
+						command.JobId,
 						existingCustomer.Id,
 						IsNewCustomer: false));
 				}
@@ -82,7 +82,7 @@ namespace LawnCare.CustomerApi.Infrastructure
 					// Publish CustomerCreatedEvent
 					await _publishEndpoint.Publish(new LawnCare.Shared.MessageContracts.CustomerCreatedEvent(
 						command.TenantId,
-						command.EstimateId,
+						command.JobId,
 						newCustomer.Id));
 				}
 			}
@@ -93,7 +93,7 @@ namespace LawnCare.CustomerApi.Infrastructure
 				// Publish CustomerProcessingFailedEvent
 				await _publishEndpoint.Publish(new LawnCare.Shared.MessageContracts.CustomerProcessingFailedEvent(
 					command.TenantId,
-					command.EstimateId,
+					command.JobId,
 					$"Failed to process customer: {ex.Message}"));
 
 				// Rethrow to let MassTransit retry policy handle it

@@ -221,7 +221,7 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
 
 	    try
 	    {
-		    var dto = JsonSerializer.Deserialize<MoneyDto>(json);
+		    var dto = JsonSerializer.Deserialize<MoneyDto>(json, JobDbContext.JsonOptions);
 		    return dto != null 
 			    ? new Money(dto.Amount, dto.Currency)
 			    : Money.Zero(); // Safe fallback if deserialization returns null

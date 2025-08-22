@@ -24,16 +24,17 @@ public class FieldEstimate
 
 public record JobServiceItem(string ServiceName, int Quantity, string Comment, decimal Price);
 
-public record ProcessCustomerCommand(Guid TenantId, Guid EstimateId, CustomerInfo Customer);
-public record CreateJobCommand(Guid TenantId, Guid EstimateId, Guid CustomerId, JobDetails Job);
+public record ProcessCustomerCommand(Guid TenantId, Guid JobId, CustomerInfo Customer);
+public record MoveJobToPendingCommand(Guid JobId, Guid CustomerId);
 public record SendWelcomeEmailCommand(Guid TenantId, Guid CustomerId, CustomerInfo Customer, Guid EstimateId);
 
 // Events
+// TODO: Estimate ID needs to change to job Id for all of these.
 public record EstimateReceivedEvent(Guid TenantId, Guid EstimateId, CustomerInfo Customer, JobDetails Job, string EstimatorId);
 public record CustomerFoundEvent(Guid TenantId, Guid EstimateId, Guid CustomerId, bool IsNewCustomer = false);
 public record CustomerCreatedEvent(Guid TenantId, Guid EstimateId, Guid CustomerId);
 public record CustomerProcessingFailedEvent(Guid TenantId, Guid EstimateId, string Reason);
-public record JobCreatedEvent(Guid TenantId, Guid EstimateId, Guid JobId);
+public record JobCreatedEvent(Guid JobId, Guid TenantId, Guid EstimateId, Guid CustomerId);
 public record JobCreationFailedEvent(Guid TenantId, Guid EstimateId, string Reason);
 public record WelcomeEmailSentEvent(Guid TenantId, Guid EstimateId, Guid CustomerId);
 public record WelcomeEmailFailedEvent(Guid TenantId, Guid EstimateId, Guid CustomerId, string Reason);

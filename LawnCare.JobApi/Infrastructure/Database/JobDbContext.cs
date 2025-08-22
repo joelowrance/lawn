@@ -262,9 +262,9 @@ namespace JobService.Infrastructure.Persistence
                         // This is a safety net for cases where domain operations might miss it
                         var updatedAtProperty = entry.Property(nameof(Job.UpdatedAt));
                         if (!updatedAtProperty.IsModified || 
-                            (DateTime)updatedAtProperty.CurrentValue! < DateTime.UtcNow.AddSeconds(-5))
+                            (DateTimeOffset)updatedAtProperty.CurrentValue! < DateTimeOffset.UtcNow.AddSeconds(-5))
                         {
-                            updatedAtProperty.CurrentValue = DateTime.UtcNow;
+                            updatedAtProperty.CurrentValue = DateTimeOffset.UtcNow;
                         }
                     }
                 }
@@ -432,7 +432,8 @@ namespace JobService.Infrastructure.Persistence
     // ============================================================================
 
     internal record MoneyDto(decimal Amount, string Currency);
-    
+
+        
     //internal record ServiceTypeDto(string Category, string ServiceName, string Description);
     
     internal record ServiceAddressDto(

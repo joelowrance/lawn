@@ -12,10 +12,10 @@
 		<PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.1" />
 		<PackageVersion Include="MediatR" Version="13.0.0" />
 		<PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6"/>
+		<PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.6"/>
 		<PackageVersion Include="MassTransit" Version="$(MassTransitVersion)" />
 		<PackageVersion Include="MassTransit.RabbitMQ" Version="$(MassTransitVersion)" />
 		<PackageVersion Include="MassTransit.EntityFrameworkCore" Version="$(MassTransitVersion)"/>
-		
 	</ItemGroup>
 	<ItemGroup Label="EntityFramework">
 		<PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfVersion)" />

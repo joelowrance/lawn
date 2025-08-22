@@ -17,3 +17,9 @@
       context: .
       dockerfile: LawnCare.StateMachine/Dockerfile
 
+  lawncare.communications:
+    image: lawncare.communications
+    build:
+      context: .
+      dockerfile: LawnCare.Communications/Dockerfile
+

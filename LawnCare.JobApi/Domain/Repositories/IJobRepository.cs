@@ -32,7 +32,7 @@ public class JobRepository : IJobRepository
 
 	public async Task<Job?> GetByIdAsync(JobId jobId, TenantId tenantId)
 	{
-		return await _dbContext.Jobs.FirstOrDefaultAsync(x => x.JobId == jobId && x.TenantId == tenantId);
+		return await _dbContext.Jobs.FirstOrDefaultAsync(x => x.JobId == jobId);
 		
 	}
 

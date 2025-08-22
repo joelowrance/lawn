@@ -1,8 +1,13 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 
 using LawnCare.Shared.OpenTelemetry;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -93,7 +98,34 @@ public static class MigrateDbContextExtensions
 			return Task.CompletedTask;
 		}
 	}
-	
+// 	
+// 	//public static class ValueConversionExtensions
+// 	//{
+// 		public static PropertyBuilder<T> HasJsonConversion<T>(this PropertyBuilder<T> propertyBuilder, JsonSerializerOptions options) where T : class, new()
+// 		{
+// 			
+// 			
+// 			ValueConverter<T, string> converter = new ValueConverter<T, string>
+// 			(
+// 				v => System.Text.Json.JsonSerializer.Serialize(v, options),
+// 				v => System.Text.Json.JsonSerializer.Deserialize<T>(v, options) ?? new T()
+// 			);
+//
+// 			ValueComparer<T> comparer = new ValueComparer<T>
+// 			(
+// 				(l, r) => System.Text.Json.JsonSerializer.Serialize(l, options) == System.Text.Json.JsonSerializer.Serialize(r, options),
+// 				v => v == null ? 0 : JsonSerializer.Serialize(v,options).GetHashCode(),
+// 				v => JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(v,options), options )!
+// 			);
+//
+// 			propertyBuilder.HasConversion(converter);
+// 			propertyBuilder.Metadata.SetValueConverter(converter);
+// 			propertyBuilder.Metadata.SetValueComparer(comparer);
+// 			propertyBuilder.HasColumnType("jsonb");
+//
+// 			return propertyBuilder;
+// 		}
+// //	}
 	
 }
 

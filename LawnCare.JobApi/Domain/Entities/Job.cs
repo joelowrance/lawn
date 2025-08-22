@@ -109,7 +109,7 @@ public class Job : AggregateRoot
 		AddDomainEvent(new JobScheduledEvent(JobId, TenantId, scheduledDate, technicianId));
 	}
 
-	public void MarkJobAsPending(JobId jobId, TenantId tenantId, CustomerId customerId)
+	public void MarkJobAsPending(CustomerId customerId)
 	{
 		Status = JobStatus.Pending;
 		CustomerId = customerId;
@@ -213,5 +213,11 @@ public class Job : AggregateRoot
 			return CompletedDate.Value - ScheduledDate.Value;
             
 		return EstimatedDuration.Duration;
+	}
+
+	public void ChangeStatus(JobStatus newStatus)
+	{
+		Status = newStatus;
+		AddDomainEvent(new JobStatusChangedEvent(JobId, newStatus));
 	}
 }

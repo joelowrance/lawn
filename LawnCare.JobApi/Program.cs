@@ -6,13 +6,16 @@ using LawnCare.JobApi.Domain.Common;
 using LawnCare.JobApi.Domain.Repositories;
 using LawnCare.JobApi.Domain.Services;
 using LawnCare.JobApi.Infrastructure.Database;
+using LawnCare.JobApi.UseCases;
 using LawnCare.Shared.Endpoints;
 using LawnCare.Shared.EntityFramework;
+using LawnCare.Shared.MessageContracts;
 using LawnCare.Shared.OpenTelemetry;
 using LawnCare.Shared.Pipelines;
 using LawnCare.Shared.ProjectSetup;
 
 using MassTransit;
+using MassTransit.Mediator;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -33,6 +36,7 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddValidatorsFromAssemblyContaining<Program>(includeInternalTypes: true);
 builder.Services.AddMassTransit(x =>
 {
+	x.AddConsumer<MoveJobToPendingCommandConsumer>(typeof(MoveJobToPendingCommandConsumerDefinition));
 	x.SetKebabCaseEndpointNameFormatter();
 	x.UsingRabbitMq((context, configuration) =>
 	{
@@ -72,14 +76,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-
-// app.MapPost("/estimate", async (MediatR.IMediator mediator, FieldEstimate estimate) =>
-// {
-// 	await mediator.Send(new ProcessEstimateCommand(estimate));
-// 	// needs a better result than just a status code
-// 	return Results.Created();
-// });
 
 app.MapGet("/", () =>
 	{
