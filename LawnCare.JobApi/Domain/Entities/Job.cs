@@ -5,8 +5,6 @@ using LawnCare.JobApi.Domain.DomainEvents;
 
 namespace LawnCare.JobApi.Domain.Entities;
 
-
-
 public class Job : AggregateRoot
 {
 	// Backing fields for EF Core access (private fields with public properties)
@@ -19,7 +17,9 @@ public class Job : AggregateRoot
     public TenantId TenantId { get; private set; } = null!;
     public CustomerId? CustomerId { get; private set; } 
     public string CustomerName { get; private set; }
-    public ServiceAddress ServiceAddress { get; private set; }
+    
+    public Guid ActualServiceAddressId { get; private set; }
+    public Address ActualServiceAddress { get; set; }
     public JobStatus Status { get; private set; }
     public JobPriority Priority { get; private set; }
     public string Description { get; private set; }
@@ -48,9 +48,9 @@ public class Job : AggregateRoot
         // These are required in the domain but EF will set them from the database
         CustomerName = null!;
         Description = null!;
-        ServiceAddress = null!;
         EstimatedDuration = null!;
         EstimatedCost = null!;
+        ActualServiceAddress = null!;
         
         // Initialize collections - these are never null
         // (backing fields are already initialized above)
@@ -62,7 +62,7 @@ public class Job : AggregateRoot
 	public Job(
 		TenantId tenantId, 
 		string customerName, 
-		ServiceAddress serviceAddress, 
+		Address serviceAddress, 
 		string description, 
 		DateTimeOffset requestedDate, 
 		EstimatedDuration estimatedDuration, Money estimatedCost)
@@ -79,7 +79,7 @@ public class Job : AggregateRoot
 		JobId = JobId.Create();
 		TenantId = tenantId ?? throw new ArgumentNullException(nameof(tenantId));
 		CustomerName = customerName ?? throw new ArgumentNullException(nameof(customerName));
-		ServiceAddress = serviceAddress ?? throw new ArgumentNullException(nameof(serviceAddress));
+		ActualServiceAddress = serviceAddress ?? throw new ArgumentNullException(nameof(serviceAddress));
 		Description = description ?? throw new ArgumentNullException(nameof(description));
 		RequestedDate = requestedDate;
 		EstimatedDuration = estimatedDuration ?? throw new ArgumentNullException(nameof(estimatedDuration));

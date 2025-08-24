@@ -57,6 +57,7 @@ builder.Services.AddSingleton<QueryHandlerMetrics>();
 builder.Services.AddTransient<IJobApplicationService, JobApplicationService>();
 builder.Services.AddTransient<JobDomainService, JobDomainService>();
 builder.Services.AddTransient<IJobRepository, JobRepository>();
+builder.Services.AddTransient<ICustomerRepository, CustomerRepository>();
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 builder.Services.AddDbContext<JobDbContext>(dbContextOptionsBuilder =>
 {

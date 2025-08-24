@@ -9,16 +9,10 @@ public class EstimatedDuration : ValueObject
 
 	public EstimatedDuration(int hours)
 	{
-		//TODO:  fuck
-		Duration =new TimeSpan(8, 0, 0);
+		Duration = new TimeSpan(hours, 0, 0);
 		Unit = "hours";
-		
-		// if (hours < 0 || hours > 40)
-		// 	throw new ArgumentException("Duration cannot be negative");
-		//
-		// Duration = new TimeSpan(hours, 0, 0);
-		// Unit = "hours";
 	}
+
 
 	public double TotalHours => Duration.TotalHours;
 
@@ -27,5 +21,5 @@ public class EstimatedDuration : ValueObject
 		yield return Duration;
 	}
 
-	public override string ToString() => $"{TotalHours:F1} hours";
+	public override string ToString() => $"{TotalHours:F1} {Unit}";
 }

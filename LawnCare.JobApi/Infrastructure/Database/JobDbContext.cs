@@ -41,6 +41,8 @@ namespace JobService.Infrastructure.Persistence
         public DbSet<Job> Jobs { get; set; } = null!;
         public DbSet<JobServiceItem> JobServiceItems { get; set; } = null!;
         public DbSet<JobNote> JobNotes { get; set; } = null!;
+        public DbSet<Customer> Customers { get; set; } = null!;
+        public DbSet<Address> Addresses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

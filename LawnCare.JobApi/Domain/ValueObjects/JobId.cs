@@ -23,3 +23,5 @@ public class JobId : ValueObject
 
 	public override string ToString() => Value.ToString();
 }
+
+

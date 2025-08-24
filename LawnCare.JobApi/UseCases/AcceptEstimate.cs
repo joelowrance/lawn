@@ -43,6 +43,18 @@ public class AcceptEstimateCommandHandler : IRequestHandler<AcceptEstimateComman
 
 	public async Task Handle(AcceptEstimateCommand request, CancellationToken cancellationToken)
 	{
+		// we want to 
+		// check if the customer exisits
+		// create the customer
+		// check if the address exists?
+		// create the address
+		// crete the job
+		// use the saga to send out a welcome email
+		// send out a 
+		
+		
+		
+		
 		var job = await _jobApplicationService.CreateJobFromFieldEstimateAsync(request.Estimate);
 		
 		_logger.LogInformation("Created job {JobId}", job.Id);

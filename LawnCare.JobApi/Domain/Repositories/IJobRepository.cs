@@ -4,10 +4,12 @@ using LawnCare.JobApi.Domain.Common;
 using LawnCare.JobApi.Domain.Entities;
 using LawnCare.JobApi.Domain.Enums;
 using LawnCare.JobApi.Domain.ValueObjects;
+using LawnCare.Shared.MessageContracts;
 
 using Microsoft.EntityFrameworkCore;
 
 namespace LawnCare.JobApi.Domain.Repositories;
+
 
 public interface IJobRepository
 {

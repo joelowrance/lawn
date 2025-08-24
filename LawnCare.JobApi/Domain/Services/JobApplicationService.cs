@@ -6,6 +6,7 @@ using LawnCare.JobApi.Domain.Repositories;
 using LawnCare.JobApi.Domain.ValueObjects;
 using LawnCare.Shared.MessageContracts;
 
+using Address = LawnCare.JobApi.Domain.Entities.Address;
 using JobServiceItem = LawnCare.Shared.MessageContracts.JobServiceItem;
 
 namespace LawnCare.JobApi.Domain.Services;
@@ -22,6 +23,8 @@ public interface IJobApplicationService
 public class JobApplicationService : IJobApplicationService
 {
         private readonly IJobRepository _jobRepository;
+        private readonly ICustomerRepository _customerRepository;
+        
         private readonly JobDomainService _jobDomainService; 
         private readonly IUnitOfWork _unitOfWork;
         ILogger<JobApplicationService> _logger;
@@ -29,20 +32,48 @@ public class JobApplicationService : IJobApplicationService
         public JobApplicationService(
             IJobRepository jobRepository,
             JobDomainService jobDomainService,
-            IUnitOfWork unitOfWork, ILogger<JobApplicationService> logger)
+            IUnitOfWork unitOfWork, ILogger<JobApplicationService> logger, ICustomerRepository customerRepository)
         {
             _jobRepository = jobRepository;
             _jobDomainService = jobDomainService;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _customerRepository = customerRepository;
         }
+        
+        
 
         public async Task<JobResponse> CreateJobFromFieldEstimateAsync(FieldEstimate estimate)
         {
 	        
+	        var existingCustomer = await _customerRepository.FindByFieldEstimateAttributes(estimate);
+
+	        if (existingCustomer == null)
+	        {
+		        _logger.LogInformation("Customer not found, creating a new one");
+		        existingCustomer = new Customer(
+			        estimate.CustomerFirstName, 
+			        estimate.CustomerLastName, 
+			        estimate.CustomerEmail, 
+			        estimate.CustomerCellPhone, 
+			        estimate.CustomerHomePhone,
+			        new Address(
+				        estimate.CustomerAddress1, 
+				        estimate.CustomerAddress2, 
+				        estimate.CustomerAddress2, 
+				        estimate.CustomerCity, 
+				        estimate.CustomerState, 
+				        estimate.CustomerZip));
+		        
+		        await _customerRepository.AddAsync(existingCustomer);
+	        }
+	        
+	        
+	        
+	        
             var tenantId = TenantId.From(estimate.TenantId);
             
-            var  address = new ServiceAddress(
+            var  address = new Address(
 	            estimate.CustomerAddress1,
 	            estimate.CustomerAddress2,
 	            estimate.CustomerAddress2,
@@ -58,7 +89,7 @@ public class JobApplicationService : IJobApplicationService
             var job = new Job(
 	            tenantId,
 	            $"{estimate.CustomerFirstName} {estimate.CustomerLastName}",
-	            address,
+	            existingCustomer.Address,
 	            estimate.Description,
                 estimate.ScheduledDate,
                 estimatedDuration,
@@ -144,15 +175,15 @@ public class JobApplicationService : IJobApplicationService
                 job.CustomerId?.Value,
                 job.CustomerName,
                 new JobAddressResponse(
-                    job.ServiceAddress.Street1,
-                    job.ServiceAddress.Street2,
-                    job.ServiceAddress.Street3,
-                    job.ServiceAddress.City,
-                    job.ServiceAddress.State,
-                    job.ServiceAddress.ZipCode,
-                    job.ServiceAddress.FullAddress,
-                    job.ServiceAddress.Latitude,
-                    job.ServiceAddress.Longitude
+                    job.ActualServiceAddress.Street1,
+                    job.ActualServiceAddress.Street2,
+                    job.ActualServiceAddress.Street3,
+                    job.ActualServiceAddress.City,
+                    job.ActualServiceAddress.State,
+                    job.ActualServiceAddress.ZipCode,
+                    job.ActualServiceAddress.FullAddress,
+                    job.ActualServiceAddress.Latitude,
+                    job.ActualServiceAddress.Longitude
                 ),
                 job.Status.ToString(),
                 job.Priority.ToString(),

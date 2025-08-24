@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 
 using JobService.Infrastructure.Persistence;
 
@@ -97,11 +97,18 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
 	        .HasColumnType("text")
 	        .IsRequired();
         
-        builder.Property(e => e.ServiceAddress)
-	        .HasConversion(serviceAddressConverter)
-	        .HasColumnType("text")
-	        .IsRequired();
+        // builder.Property(e => e.ServiceAddress)
+	       //  .HasConversion(serviceAddressConverter)
+	       //  .HasColumnType("text")
+	       //  .IsRequired();
 
+        // Configure the ActualServiceAddress navigation property with ActualServiceAddressId as foreign key
+        builder.HasOne(j => j.ActualServiceAddress)
+            .WithMany()
+            .HasForeignKey(j => j.ActualServiceAddressId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+        
         // Enum conversions
         builder.Property(e => e.Status)
 	        .HasConversion<string>()
