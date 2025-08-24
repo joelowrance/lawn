@@ -2,8 +2,6 @@
 
 namespace LawnCare.JobApi.Domain.Entities
 {
-
-	
 	public class Address : Entity
 	{
 		public string Street1 { get; }
@@ -57,17 +55,5 @@ namespace LawnCare.JobApi.Domain.Entities
 				return add;
 			}	
 		}
-	
-		
-
-		// protected override IEnumerable<object> GetEqualityComponents()
-		// {
-		// 	yield return Street1;
-		// 	yield return Street2;
-		// 	yield return Street3;
-		// 	yield return City;
-		// 	yield return State;
-		// 	yield return ZipCode;
-		// }	
 	}
 }

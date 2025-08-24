@@ -35,9 +35,9 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
 		    v => DeserializeNullableMoney(v));
 
 	    // EstimatedDuration conversion - store as TimeSpan ticks
-	    var estimatedDurationConverter = new ValueConverter<EstimatedDuration, long>(
-		    v => v.Duration.Ticks,
-		    v => new EstimatedDuration((int)v));
+	    // var estimatedDurationConverter = new ValueConverter<EstimatedDuration, long>(
+		   //  v => v.Duration.Ticks,
+		   //  v => new EstimatedDuration((int)v));
 	    
 	    var serviceAddressConverter = new ValueConverter<ServiceAddress, string>(
 		    v => JsonSerializer.Serialize(new ServiceAddressDto(
@@ -89,7 +89,7 @@ internal class JobConfiguration : IEntityTypeConfiguration<Job>
 	        .HasColumnType("text");
 
         builder.Property(e => e.EstimatedDuration)
-	        .HasConversion(estimatedDurationConverter)
+	        //.HasConversion(estimatedDurationConverter)
 	        .IsRequired();
         
         builder.Property(e => e.EstimatedCost)

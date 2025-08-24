@@ -30,7 +30,7 @@ public class CustomerRepository : ICustomerRepository
 		var existing = await _dbContext.Customers.FirstOrDefaultAsync(x => 
 			x.Email == estimate.CustomerEmail 
 			|| x.CellPhone == estimate.CustomerCellPhone 
-			|| x.Address.Street1.Equals(estimate.CustomerAddress1, StringComparison.InvariantCultureIgnoreCase));
+			|| x.Address.Street1 == estimate.CustomerAddress1);
 		
 		return existing;
 	}

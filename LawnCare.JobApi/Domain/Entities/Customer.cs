@@ -48,6 +48,7 @@ namespace LawnCare.JobApi.Domain.Entities
 			HomePhone = homePhone;
 			CreatedAt = DateTime.UtcNow;
 			Address = billingAddress;
+			CustomerId = CustomerId.From(Guid.CreateVersion7());
 		}
 	}
 	

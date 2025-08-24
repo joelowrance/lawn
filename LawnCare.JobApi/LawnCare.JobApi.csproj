@@ -24,4 +24,8 @@
       <ProjectReference Include="..\LawnCare.Shared\LawnCare.Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Application\Mapping\" />
+    </ItemGroup>
+
 </Project>
