@@ -23,3 +23,9 @@
       context: .
       dockerfile: LawnCare.Communications/Dockerfile
 
+  lawncare.coreapi:
+    image: lawncare.coreapi
+    build:
+      context: .
+      dockerfile: LawnCare.CoreApi/Dockerfile
+

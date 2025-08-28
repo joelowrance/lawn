@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.StateMachine", "La
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.Communications", "LawnCare.Communications\LawnCare.Communications.csproj", "{97A2B537-F2B8-407F-8142-9DC83B19C308}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.CoreApi", "LawnCare.CoreApi\LawnCare.CoreApi.csproj", "{A44CC935-8DD4-4853-96C1-5C0C18F4AF47}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +56,9 @@ Global
 		{97A2B537-F2B8-407F-8142-9DC83B19C308}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97A2B537-F2B8-407F-8142-9DC83B19C308}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97A2B537-F2B8-407F-8142-9DC83B19C308}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A44CC935-8DD4-4853-96C1-5C0C18F4AF47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A44CC935-8DD4-4853-96C1-5C0C18F4AF47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A44CC935-8DD4-4853-96C1-5C0C18F4AF47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A44CC935-8DD4-4853-96C1-5C0C18F4AF47}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

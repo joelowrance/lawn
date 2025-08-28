@@ -1,8 +1,7 @@
 ﻿//using JobService.Infrastructure.Persistence;
 
-using JobService.Infrastructure.Persistence;
-
-using LawnCare.JobApi.Domain.Common;
+using LawnCare.CoreApi.Domain.Common;
+using LawnCare.CoreApi.Infrastructure.Database;
 
 using MassTransit.Mediator;
 
@@ -10,11 +9,11 @@ namespace LawnCare.JobApi.Infrastructure.Database;
 
 public class UnitOfWork : IUnitOfWork
 {
-	private readonly JobDbContext _context;
+	private readonly CoreDbContext _context;
 	private readonly MassTransit.Mediator.IMediator _mediator;
 	private readonly ILogger<UnitOfWork> _logger;
 
-	public UnitOfWork(JobDbContext context, 
+	public UnitOfWork(CoreDbContext context, 
 		IMediator mediator, 
 		ILogger<UnitOfWork> logger)
 	{

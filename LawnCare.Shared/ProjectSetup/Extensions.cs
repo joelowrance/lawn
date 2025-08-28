@@ -16,8 +16,19 @@ using OpenTelemetry.Trace;
 
 namespace LawnCare.Shared.ProjectSetup
 {
+	/// <summary>
+	/// Provides extension methods to configure common service defaults,
+	/// OpenTelemetry (logging, metrics, tracing), and standard health endpoints.
+	/// </summary>
 	public static class Extensions
 	{
+		/// <summary>
+		/// Adds common service defaults to the host builder:
+		/// OpenTelemetry configuration, default health checks, HTTP context accessor,
+		/// service discovery, and resilient HTTP client defaults.
+		/// </summary>
+		/// <param name="builder">The host application builder.</param>
+		/// <returns>The same <see cref="IHostApplicationBuilder"/> for chaining.</returns>
 		public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
 		{
 			builder.ConfigureOpenTelemetry();
@@ -40,6 +51,13 @@ namespace LawnCare.Shared.ProjectSetup
 			return builder;
 		}
 		
+		/// <summary>
+		/// Configures OpenTelemetry for logging, metrics, and tracing,
+		/// including common ASP.NET Core and HTTP client instrumentation,
+		/// runtime metrics, and custom meters/sources.
+		/// </summary>
+		/// <param name="builder">The host application builder.</param>
+		/// <returns>The same <see cref="IHostApplicationBuilder"/> for chaining.</returns>
 		public static IHostApplicationBuilder ConfigureOpenTelemetry(this IHostApplicationBuilder builder)
 		{
 			builder.Logging.EnableEnrichment();
@@ -76,6 +94,13 @@ namespace LawnCare.Shared.ProjectSetup
 			return builder;
 		}
 		
+		/// <summary>
+		/// Adds OpenTelemetry exporters based on configuration.
+		/// Currently enables the OTLP exporter when the
+		/// OTEL_EXPORTER_OTLP_ENDPOINT configuration value is provided.
+		/// </summary>
+		/// <param name="builder">The host application builder.</param>
+		/// <returns>The same <see cref="IHostApplicationBuilder"/> for chaining.</returns>
 		private static IHostApplicationBuilder AddOpenTelemetryExporters(this IHostApplicationBuilder builder)
 		{
 			var useOtlpExporter = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
@@ -87,6 +112,13 @@ namespace LawnCare.Shared.ProjectSetup
 
 			return builder;
 		}
+
+		/// <summary>
+		/// Registers default health checks, including a simple liveness check named "self"
+		/// that is tagged with "live" to distinguish it from readiness checks.
+		/// </summary>
+		/// <param name="builder">The host application builder.</param>
+		/// <returns>The same <see cref="IHostApplicationBuilder"/> for chaining.</returns>
 		public static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder)
 		{
 			builder.Services.AddHealthChecks()
@@ -96,6 +128,17 @@ namespace LawnCare.Shared.ProjectSetup
 			return builder;
 		}
 		
+		/// <summary>
+		/// Maps default health endpoints for development environments:
+		/// - GET /health: readiness probe (all checks must pass)
+		/// - GET /alive: liveness probe (only checks tagged "live" must pass)
+		/// </summary>
+		/// <param name="app">The web application.</param>
+		/// <returns>The same <see cref="WebApplication"/> for chaining.</returns>
+		/// <remarks>
+		/// Health endpoints are mapped only in development to avoid exposing them
+		/// in production without proper security controls.
+		/// </remarks>
 		public static WebApplication MapDefaultEndpoints(this WebApplication app)
 		{
 			// Adding health checks endpoints to applications in non-development environments has security implications.

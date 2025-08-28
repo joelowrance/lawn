@@ -14,4 +14,6 @@ namespace LawnCare.JobApi.Domain.Common
 			return GetType().GetHashCode();
 		}
 	}
+
+
 }

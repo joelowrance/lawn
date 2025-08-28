@@ -23,7 +23,7 @@ var mailDev = builder.AddMailDev("maildev", 1080, 25);
 
 var postgreSQL = builder.AddPostgres(
 		"postgres-sql", postgresUser, postgresPass, port: 5432)
-	.WithLifetime(ContainerLifetime.Persistent)
+	//.WithLifetime(ContainerLifetime.Persistent)
 	.WithDataBindMount(@"c:\temp\LawnCare-Postgres");
  	// .WithPgAdmin(cfg =>
   //   {
@@ -31,31 +31,37 @@ var postgreSQL = builder.AddPostgres(
   //   });
 
 
- var customerDatabase = postgreSQL.AddDatabase("customers-connection", "customers");
- var jobDatabase = postgreSQL.AddDatabase("job-connection", "jobs");
- var sagaDb = postgreSQL.AddDatabase("saga-connection", "sagas");
+ //var customerDatabase = postgreSQL.AddDatabase("customers-connection", "customers");
+ var coreApiDatabase = postgreSQL.AddDatabase("job-connection", "Core");
+ //var sagaDb = postgreSQL.AddDatabase("saga-connection", "sagas");
  var communicationsDb = postgreSQL.AddDatabase("communications-connection", "communications");
 
 // Other projects in the solution
- builder.AddProject<Projects.LawnCare_JobApi>("job-api")
-	 .WithReference(rabbitMq)
-	 .WaitFor(rabbitMq)
-	 .WithReference(jobDatabase)
-	 .WaitFor(jobDatabase);
+ // builder.AddProject<Projects.LawnCare_JobApi>("job-api")
+	//  .WithReference(rabbitMq)
+	//  .WaitFor(rabbitMq)
+	//  .WithReference(jobDatabase)
+	//  .WaitFor(jobDatabase);
 	 
 
- builder.AddProject<Projects.LawnCare_StateMachine>("state-machine")
-	 .WithReference(rabbitMq)
-	 .WaitFor(rabbitMq)
-	 .WithReference(sagaDb)
-	 .WaitFor(sagaDb);
+ // builder.AddProject<Projects.LawnCare_StateMachine>("state-machine")
+	//  .WithReference(rabbitMq)
+	//  .WaitFor(rabbitMq)
+	//  .WithReference(sagaDb)
+	//  .WaitFor(sagaDb);
 	
 
- builder.AddProject<Projects.LawnCare_CustomerApi>("customer-api")
- 	.WithReference(rabbitMq)
- 	.WaitFor(rabbitMq)
- 	.WithReference(customerDatabase)
- 	.WaitFor(customerDatabase);
+ // builder.AddProject<Projects.LawnCare_CustomerApi>("customer-api")
+ // 	.WithReference(rabbitMq)
+ // 	.WaitFor(rabbitMq)
+ // 	.WithReference(customerDatabase)
+ // 	.WaitFor(customerDatabase);
+
+ builder.AddProject<Projects.LawnCare_CoreApi>("core-api")
+	 .WithReference(rabbitMq)
+	 .WaitFor(rabbitMq)
+	 .WithReference(coreApiDatabase)
+	 .WaitFor(coreApiDatabase);
 
  builder.AddProject<Projects.LawnCare_Communications>("communications")
 	 .WithReference(rabbitMq)

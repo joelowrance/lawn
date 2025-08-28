@@ -9,4 +9,6 @@ namespace LawnCare.JobApi.Domain.ValueObjects
 		public static CustomerId From(Guid value) => new(value);
 		protected override IEnumerable<object> GetEqualityComponents() { yield return Value; }
 	}
+	
+	 
 }
