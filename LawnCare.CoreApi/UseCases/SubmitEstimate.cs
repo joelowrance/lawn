@@ -1,7 +1,13 @@
-﻿using LawnCare.Shared.Endpoints;
+﻿using LawnCare.CoreApi.Domain.Common;
+using LawnCare.CoreApi.Domain.Entities;
+using LawnCare.CoreApi.Domain.ValueObjects;
+using LawnCare.CoreApi.Infrastructure.Database;
+using LawnCare.Shared.Endpoints;
 using LawnCare.Shared.MessageContracts;
 
 using MediatR;
+
+using Microsoft.EntityFrameworkCore;
 
 namespace LawnCare.CoreApi.UseCases;
 
@@ -23,12 +29,56 @@ public class SubmitEstimate : IEndpoint
 
 public record SubmitEstimateCommand(JobEstimate Estimate) : IRequest;
 
+ 
 public record SubmitEstimateCommandHandler : IRequestHandler<SubmitEstimateCommand>
 {
-	public Task Handle(SubmitEstimateCommand request, CancellationToken cancellationToken)
+	private readonly IUnitOfWork _unitOfWork;
+	private readonly CoreDbContext _dbContext;
+
+	public SubmitEstimateCommandHandler(IUnitOfWork unitOfWork, CoreDbContext dbContext)
 	{
-		throw new NotImplementedException();
+		_unitOfWork = unitOfWork;
+		_dbContext = dbContext;
 	}
+
+	public async Task Handle(SubmitEstimateCommand request, CancellationToken cancellationToken)
+	{
+		// TODO normalize phones
+		var customer = await _dbContext.Customers
+			.Where(x => x.Email == new EmailAddress(request.Estimate.CustomerEmail) ||
+			                                          x.CellPhone  == new PhoneNumber(request.Estimate.CustomerCellPhone))
+			.FirstOrDefaultAsync(cancellationToken);
+
+		if (customer == null)
+		{
+			customer = new Customer(request.Estimate.CustomerFirstName, request.Estimate.CustomerLastName,
+				new EmailAddress(request.Estimate.CustomerEmail),
+				new PhoneNumber(request.Estimate.CustomerHomePhone),
+				new PhoneNumber(request.Estimate.CustomerCellPhone));
+			_dbContext.Customers.Add(customer);
+		}
+		
+		// TODO normalize addresses
+		var location = await _dbContext.Locations
+			.Where(x => x.Street1 == request.Estimate.CustomerAddress1 &&
+			            x.Postcode == new Postcode(request.Estimate.CustomerZip))
+			.FirstOrDefaultAsync(cancellationToken);
+
+
+		if (location == null)
+		{
+			location = new Location(request.Estimate.CustomerAddress1, request.Estimate.CustomerAddress2,request.Estimate.CustomerAddress3,
+				request.Estimate.CustomerCity, request.Estimate.CustomerState, new Postcode(request.Estimate.CustomerZip), customer);
+			_dbContext.Locations.Add(location);
+		}
+
+		var job = new Job(request.Estimate.ScheduledDate.ToUniversalTime(), JobPriority.Normal, new Money(request.Estimate.EstimatedCost), location.LocationId);
+		_dbContext.Jobs.Add(job);
+		
+		await _unitOfWork.SaveChangesAsync(cancellationToken);
+	}
+	
+	 
 }
 
 /// <summary>

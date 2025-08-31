@@ -1,8 +1,11 @@
 ﻿using System.Text.Json;
 
 using LawnCare.CoreApi.Domain.Common;
+using LawnCare.CoreApi.Domain.Entities;
+using LawnCare.Shared.MessageContracts;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace LawnCare.CoreApi.Infrastructure.Database
 {
@@ -26,6 +29,32 @@ namespace LawnCare.CoreApi.Infrastructure.Database
 			WriteIndented = false,
 			PropertyNameCaseInsensitive = true
 		};
+		
+		public DbSet<Job> Jobs { get; set; }
+		public DbSet<Customer> Customers { get; set; }
+		public DbSet<Location> Locations { get; set; }
+		
+		// Comparers
+		public static ValueComparer<PhoneNumber> PhoneNumberComparer => new ValueComparer<PhoneNumber>
+		(
+			(left, right) => left!.Value == right!.Value,
+			v => v.Value.GetHashCode(),
+			v => new PhoneNumber(v.Value)
+		);
+		
+		public static ValueComparer<EmailAddress> EmailComparer => new ValueComparer<EmailAddress>
+		(
+			(left, right) => left!.Value == right!.Value,
+			v => v.Value.GetHashCode(),
+			v => new EmailAddress(v.Value)
+		);
+		
+		public static ValueComparer<Postcode> PostCodeComparer => new ValueComparer<Postcode>
+		(
+			(left, right) => left!.Value == right!.Value,
+			v => v.Value.GetHashCode(),
+			v => new Postcode(v.Value)
+		);
 		
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{

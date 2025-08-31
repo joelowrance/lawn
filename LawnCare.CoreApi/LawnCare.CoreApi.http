@@ -1,6 +1,42 @@
 @LawnCare.CoreApi_HostAddress = http://localhost:5236
 
-GET {{LawnCare.CoreApi_HostAddress}}/weatherforecast/
+GET http://localhost:5236/weatherforecast/
 Accept: application/json
 
 ###
+
+POST http://localhost:5236/estimate
+Content-Type: application/json
+
+{
+    "userId": "user123",
+    "customerFirstName": "John",
+    "customerLastName": "Doe",
+    "customerAddress1": "123 Main St",
+    "customerAddress2": "",
+    "customerAddress3": "",
+    "customerCity": "Springfield",
+    "customerState": "IL",
+    "customerZip": "62701",
+    "customerHomePhone": "(323) 555-0123",
+    "customerCellPhone": "(323) 555-0124",
+    "customerEmail": "john.doe@example.com",
+    "scheduledDate": "2025-09-15T10:00:00-05:00",
+    "estimatedCost": 250.00,
+    "estimatedDuration": 120,
+    "description": "Lawn mowing and edging",
+    "services": [
+        {
+            "serviceName": "Lawn Mowing",
+            "quantity": 1,
+            "comment": "Front and back yard",
+            "price": 150.00
+        },
+        {
+            "serviceName": "Edging",
+            "quantity": 1,
+            "comment": "All walkways",
+            "price": 100.00
+        }
+    ]
+}

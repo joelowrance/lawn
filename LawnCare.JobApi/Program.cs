@@ -9,13 +9,11 @@ using LawnCare.JobApi.Infrastructure.Database;
 using LawnCare.JobApi.UseCases;
 using LawnCare.Shared.Endpoints;
 using LawnCare.Shared.EntityFramework;
-using LawnCare.Shared.MessageContracts;
 using LawnCare.Shared.OpenTelemetry;
 using LawnCare.Shared.Pipelines;
 using LawnCare.Shared.ProjectSetup;
 
 using MassTransit;
-using MassTransit.Mediator;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -54,7 +52,7 @@ builder.Services.AddMediator(cfg =>
 builder.Services.AddSingleton<IActivityScope, ActivityScope>();
 builder.Services.AddSingleton<CommandHandlerMetrics>();
 builder.Services.AddSingleton<QueryHandlerMetrics>();
-builder.Services.AddTransient<IJobApplicationService, JobApplicationService>();
+builder.Services.AddTransient<IJobApplicationService, JobApplicationService>(); 
 builder.Services.AddTransient<JobDomainService, JobDomainService>();
 builder.Services.AddTransient<IJobRepository, JobRepository>();
 builder.Services.AddTransient<ICustomerRepository, CustomerRepository>();

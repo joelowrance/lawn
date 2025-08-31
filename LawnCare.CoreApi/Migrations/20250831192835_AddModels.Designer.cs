@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using LawnCare.CoreApi.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LawnCare.CoreApi.Migrations
 {
     [DbContext(typeof(CoreDbContext))]
-    partial class CoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250831192835_AddModels")]
+    partial class AddModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -84,10 +87,6 @@ namespace LawnCare.CoreApi.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<Guid>("LocationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("location_id");
-
                     b.Property<string>("Priority")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -128,9 +127,6 @@ namespace LawnCare.CoreApi.Migrations
 
                     b.HasKey("JobId")
                         .HasName("pk_jobs");
-
-                    b.HasIndex("LocationId")
-                        .HasDatabaseName("IX_Jobs_LocationId");
 
                     b.HasIndex("Priority")
                         .HasDatabaseName("IX_Jobs_Priority");
@@ -340,16 +336,6 @@ namespace LawnCare.CoreApi.Migrations
                         .HasDatabaseName("IX_LocationNotes_LocationId");
 
                     b.ToTable("location_notes", (string)null);
-                });
-
-            modelBuilder.Entity("LawnCare.CoreApi.Domain.Entities.Job", b =>
-                {
-                    b.HasOne("LawnCare.CoreApi.Domain.Entities.Location", null)
-                        .WithMany()
-                        .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_jobs_locations_location_id");
                 });
 
             modelBuilder.Entity("LawnCare.CoreApi.Domain.Entities.JobLineItem", b =>

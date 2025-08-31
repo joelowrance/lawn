@@ -6,9 +6,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace LawnCare.CoreApi.Domain.Entities
 {
-
-	
-	
 	public class JobLineItem : Entity, IAuditable
 	{
 		public string ServiceName { get; private set; } = null!;

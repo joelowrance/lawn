@@ -7,7 +7,7 @@ public class Money : ValueObject
 	public decimal Amount { get; }
 	public string Currency { get; }
 
-	public Money(decimal amount, string currency = "USD")
+	private Money(decimal amount, string currency = "USD")
 	{
 		if (amount < 0)
 			throw new ArgumentException("Amount cannot be negative", nameof(amount));
@@ -15,6 +15,8 @@ public class Money : ValueObject
 		Amount = amount;
 		Currency = currency ?? throw new ArgumentNullException(nameof(currency));
 	}
+
+	public Money(decimal amount) : this(amount, "USD") { }
 
 	public static Money Zero() => new(0);
 
