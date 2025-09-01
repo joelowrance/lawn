@@ -1,0 +1,41 @@
+/* NavMenu specific styles - most styles moved to app.css */
+
+/* Custom scrollbar for sidebar */
+.sidebar-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Animation for nav items */
+.nav-item {
+    animation: slideInLeft 0.3s ease-out;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Stagger animation for nav sections */
+.nav-section:nth-child(1) .nav-item { animation-delay: 0.1s; }
+.nav-section:nth-child(2) .nav-item { animation-delay: 0.2s; }
+.nav-section:nth-child(3) .nav-item { animation-delay: 0.3s; }
+.nav-section:nth-child(4) .nav-item { animation-delay: 0.4s; }

@@ -1,0 +1,85 @@
+<div class="sidebar-header">
+    <div class="logo">
+        <div class="logo-icon">🌱</div>
+        <div class="logo-text">
+            <span class="logo-title">LawnCare</span>
+            <span class="logo-subtitle">Management</span>
+        </div>
+    </div>
+</div>
+
+<div class="sidebar-content">
+    <nav class="nav-menu">
+        <div class="nav-section">
+            <div class="nav-section-title">Dashboard</div>
+            <NavLink class="nav-item" href="" Match="NavLinkMatch.All">
+                <div class="nav-icon">🏠</div>
+                <span class="nav-text">Overview</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Operations</div>
+            <NavLink class="nav-item" href="scheduling">
+                <div class="nav-icon">📅</div>
+                <span class="nav-text">Scheduling</span>
+            </NavLink>
+            <NavLink class="nav-item" href="customers">
+                <div class="nav-icon">👥</div>
+                <span class="nav-text">Customers</span>
+            </NavLink>
+            <NavLink class="nav-item" href="technicians">
+                <div class="nav-icon">👷</div>
+                <span class="nav-text">Technicians</span>
+            </NavLink>
+            <NavLink class="nav-item" href="routes">
+                <div class="nav-icon">🗺️</div>
+                <span class="nav-text">Routes</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Business</div>
+            <NavLink class="nav-item" href="invoicing">
+                <div class="nav-icon">💰</div>
+                <span class="nav-text">Invoicing</span>
+            </NavLink>
+            <NavLink class="nav-item" href="reports">
+                <div class="nav-icon">📊</div>
+                <span class="nav-text">Reports</span>
+            </NavLink>
+            <NavLink class="nav-item" href="equipment">
+                <div class="nav-icon">🔧</div>
+                <span class="nav-text">Equipment</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">System</div>
+            <NavLink class="nav-item" href="counter">
+                <div class="nav-icon">⚙️</div>
+                <span class="nav-text">Settings</span>
+            </NavLink>
+            <NavLink class="nav-item" href="fetchdata">
+                <div class="nav-icon">📋</div>
+                <span class="nav-text">Data</span>
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void CollapseNavMenu()
+    {
+        collapseNavMenu = true;
+    }
+}

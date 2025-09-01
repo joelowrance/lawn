@@ -1,0 +1,122 @@
+@page "/"
+
+<PageTitle>Dashboard - Lawn Care Management</PageTitle>
+
+<div class="dashboard">
+    <div class="dashboard-header">
+        <div class="welcome-section">
+            <h1 class="welcome-title">Welcome back!</h1>
+            <p class="welcome-subtitle">Here's what's happening with your lawn care business today.</p>
+        </div>
+        <div class="date-section">
+            <div class="current-date">@DateTime.Now.ToString("dddd, MMMM dd, yyyy")</div>
+            <div class="current-time">@DateTime.Now.ToString("h:mm tt")</div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-content">
+                <div class="stat-number">24</div>
+                <div class="stat-label">Today's Appointments</div>
+                <div class="stat-change positive">+3 from yesterday</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+                <div class="stat-number">1,247</div>
+                <div class="stat-label">Active Customers</div>
+                <div class="stat-change positive">+12 this week</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-content">
+                <div class="stat-number">$8,420</div>
+                <div class="stat-label">Today's Revenue</div>
+                <div class="stat-change positive">+15% from last week</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🌡️</div>
+            <div class="stat-content">
+                <div class="stat-number">72°F</div>
+                <div class="stat-label">Current Weather</div>
+                <div class="stat-change neutral">Perfect for lawn care</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+        <h2 class="section-title">Quick Actions</h2>
+        <div class="actions-grid">
+            <div class="action-card">
+                <div class="action-icon">📅</div>
+                <div class="action-content">
+                    <h3 class="action-title">Schedule Service</h3>
+                    <p class="action-description">Book a new lawn care appointment</p>
+                    <button class="action-button">Schedule Now</button>
+                </div>
+            </div>
+            
+            <div class="action-card">
+                <div class="action-icon">👥</div>
+                <div class="action-content">
+                    <h3 class="action-title">Add Customer</h3>
+                    <p class="action-description">Register a new customer</p>
+                    <button class="action-button">Add Customer</button>
+                </div>
+            </div>
+            
+            <div class="action-card">
+                <div class="action-icon">🗺️</div>
+                <div class="action-content">
+                    <h3 class="action-title">Optimize Routes</h3>
+                    <p class="action-description">Plan efficient service routes</p>
+                    <button class="action-button">Plan Routes</button>
+                </div>
+            </div>
+            
+            <div class="action-card">
+                <div class="action-icon">📊</div>
+                <div class="action-content">
+                    <h3 class="action-title">View Reports</h3>
+                    <p class="action-description">Check business performance</p>
+                    <button class="action-button">View Reports</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="recent-activity">
+        <h2 class="section-title">Recent Activity</h2>
+        <div class="activity-list">
+            <div class="activity-item">
+                <div class="activity-icon">✅</div>
+                <div class="activity-content">
+                    <div class="activity-title">Service completed at 123 Oak Street</div>
+                    <div class="activity-time">2 hours ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">💰</div>
+                <div class="activity-content">
+                    <div class="activity-title">Payment received from Smith Family</div>
+                    <div class="activity-time">4 hours ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">📅</div>
+                <div class="activity-content">
+                    <div class="activity-title">New appointment scheduled for tomorrow</div>
+                    <div class="activity-time">6 hours ago</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

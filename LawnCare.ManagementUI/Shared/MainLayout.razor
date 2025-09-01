@@ -1,0 +1,32 @@
+@inherits LayoutComponentBase
+
+<div class="app-container">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1 class="page-title">Lawn Care Management</h1>
+                </div>
+                <div class="header-right">
+                    <div class="user-menu">
+                        <div class="user-avatar">
+                            <span class="avatar-text">LC</span>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Admin User</span>
+                            <span class="user-role">Administrator</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-area">
+            @Body
+        </div>
+    </main>
+</div>

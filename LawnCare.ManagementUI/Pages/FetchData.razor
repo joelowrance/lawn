@@ -1,0 +1,123 @@
+@page "/fetchdata"
+@using System.Net.Http
+@inject HttpClient Http
+
+<PageTitle>Data Management - Lawn Care Management</PageTitle>
+
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">Data Management</h1>
+        <p class="page-subtitle">View and manage your lawn care data</p>
+    </div>
+
+    <div class="data-section">
+        <div class="data-header">
+            <h2 class="section-title">Weather Forecast</h2>
+            <p class="section-description">Current weather conditions for optimal lawn care planning</p>
+        </div>
+
+        @if (forecasts == null)
+        {
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Loading weather data...</p>
+            </div>
+        }
+        else
+        {
+            <div class="weather-cards">
+                @foreach (var forecast in forecasts)
+                {
+                    <div class="weather-card">
+                        <div class="weather-date">@forecast.Date.ToString("dddd, MMM dd")</div>
+                        <div class="weather-temp">
+                            <span class="temp-celsius">@forecast.TemperatureC°C</span>
+                            <span class="temp-fahrenheit">@forecast.TemperatureF°F</span>
+                        </div>
+                        <div class="weather-summary">@forecast.Summary</div>
+                        <div class="weather-icon">
+                            @GetWeatherIcon(forecast.Summary ?? "")
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="data-section">
+        <div class="data-header">
+            <h2 class="section-title">Quick Stats</h2>
+            <p class="section-description">Overview of your lawn care operations</p>
+        </div>
+        
+        <div class="stats-overview">
+            <div class="stat-item">
+                <div class="stat-icon">🌱</div>
+                <div class="stat-info">
+                    <div class="stat-number">156</div>
+                    <div class="stat-label">Properties Managed</div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">📅</div>
+                <div class="stat-info">
+                    <div class="stat-number">89</div>
+                    <div class="stat-label">Services This Week</div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">👷</div>
+                <div class="stat-info">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Active Technicians</div>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">⭐</div>
+                <div class="stat-info">
+                    <div class="stat-number">4.8</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private WeatherForecast[]? forecasts;
+
+    protected override Task OnInitializedAsync()
+    {
+        // For demo purposes, we'll create sample data instead of calling an API
+        forecasts = new WeatherForecast[]
+        {
+            new() { Date = DateOnly.FromDateTime(DateTime.Now), TemperatureC = 22, Summary = "Sunny" },
+            new() { Date = DateOnly.FromDateTime(DateTime.Now.AddDays(1)), TemperatureC = 18, Summary = "Cloudy" },
+            new() { Date = DateOnly.FromDateTime(DateTime.Now.AddDays(2)), TemperatureC = 25, Summary = "Hot" },
+            new() { Date = DateOnly.FromDateTime(DateTime.Now.AddDays(3)), TemperatureC = 15, Summary = "Cool" },
+            new() { Date = DateOnly.FromDateTime(DateTime.Now.AddDays(4)), TemperatureC = 20, Summary = "Mild" }
+        };
+        return Task.CompletedTask;
+    }
+
+    private string GetWeatherIcon(string summary)
+    {
+        return summary?.ToLower() switch
+        {
+            "sunny" => "☀️",
+            "hot" => "🌡️",
+            "cloudy" => "☁️",
+            "cool" => "🌤️",
+            "mild" => "🌥️",
+            _ => "🌤️"
+        };
+    }
+
+    public class WeatherForecast
+    {
+        public DateOnly Date { get; set; }
+        public int TemperatureC { get; set; }
+        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        public string? Summary { get; set; }
+    }
+}

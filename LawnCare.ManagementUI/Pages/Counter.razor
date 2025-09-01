@@ -1,0 +1,61 @@
+@page "/counter"
+
+<PageTitle>Settings - Lawn Care Management</PageTitle>
+
+<div class="page-container">
+    <div class="page-header">
+        <h1 class="page-title">System Settings</h1>
+        <p class="page-subtitle">Configure your lawn care management system</p>
+    </div>
+
+    <div class="settings-grid">
+        <div class="settings-card">
+            <div class="settings-header">
+                <h3 class="settings-title">Demo Counter</h3>
+                <p class="settings-description">This is a demo component to test interactivity</p>
+            </div>
+            <div class="settings-content">
+                <div class="counter-display">
+                    <div class="counter-number">@currentCount</div>
+                    <div class="counter-label">Current Count</div>
+                </div>
+                <button class="btn btn-primary counter-button" @onclick="IncrementCount">
+                    <span class="button-icon">➕</span>
+                    Increment Counter
+                </button>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <div class="settings-header">
+                <h3 class="settings-title">System Information</h3>
+                <p class="settings-description">Current system status and version</p>
+            </div>
+            <div class="settings-content">
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="info-label">Version:</span>
+                        <span class="info-value">1.0.0</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Environment:</span>
+                        <span class="info-value">Development</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Last Updated:</span>
+                        <span class="info-value">@DateTime.Now.ToString("MMM dd, yyyy")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}
