@@ -1,0 +1,59 @@
+@page "/login"
+@layout AuthLayout
+@using Microsoft.AspNetCore.Authentication
+@inject NavigationManager Navigation
+@inject IConfiguration Configuration
+@inject IHttpContextAccessor HttpContextAccessor
+@attribute [AllowAnonymous]
+
+<PageTitle>Login - Lawn Care Management</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo-section">
+                <div class="logo-icon">🌱</div>
+                <h1 class="logo-title">Lawn Care Management</h1>
+            </div>
+            <p class="login-subtitle">Sign in to access your lawn care business dashboard</p>
+        </div>
+
+        <div class="login-content">
+            <div class="login-form">
+                <div class="form-group">
+                    <a href="/login" class="login-button">
+                        <span class="button-icon">🔐</span>
+                        Sign In with Auth0
+                    </a>
+                </div>
+                
+                <div class="login-divider">
+                    <span class="divider-text">Secure Authentication</span>
+                </div>
+                
+                <div class="login-info">
+                    <div class="info-item">
+                        <span class="info-icon">🛡️</span>
+                        <span class="info-text">Enterprise-grade security</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">👥</span>
+                        <span class="info-text">Multi-tenant support</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">📱</span>
+                        <span class="info-text">Mobile-friendly access</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="login-footer">
+            <p class="footer-text">
+                By signing in, you agree to our 
+                <a href="#" class="footer-link">Terms of Service</a> and 
+                <a href="#" class="footer-link">Privacy Policy</a>
+            </p>
+        </div>
+    </div>
+</div>

@@ -1,32 +1,91 @@
 @inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
 
-<div class="app-container">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<AuthorizeView>
+    <Authorized>
+        <div class="app-container">
+            <div class="sidebar">
+                <NavMenu />
+            </div>
 
-    <main class="main-content">
-        <header class="top-header">
-            <div class="header-content">
-                <div class="header-left">
-                    <h1 class="page-title">Lawn Care Management</h1>
-                </div>
-                <div class="header-right">
-                    <div class="user-menu">
-                        <div class="user-avatar">
-                            <span class="avatar-text">LC</span>
+            <main class="main-content">
+                <header class="top-header">
+                    <div class="header-content">
+                        <div class="header-left">
+                            <h1 class="page-title">Lawn Care Management</h1>
                         </div>
-                        <div class="user-info">
-                            <span class="user-name">Admin User</span>
-                            <span class="user-role">Administrator</span>
+                        <div class="header-right">
+                            <div class="user-menu">
+                                <div class="user-avatar">
+                                    <span class="avatar-text">@GetUserInitials()</span>
+                                </div>
+                                <div class="user-info">
+                                    <span class="user-name">@GetUserName()</span>
+                                    <span class="user-role">@GetUserRole()</span>
+                                </div>
+                                <div class="user-actions">
+                                    <button class="logout-button" @onclick="LogoutAsync" title="Sign Out">
+                                        <span class="button-icon">🚪</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </header>
+                </header>
 
-        <div class="content-area">
-            @Body
+                <div class="content-area">
+                    @Body
+                </div>
+            </main>
         </div>
-    </main>
-</div>
+    </Authorized>
+    <NotAuthorized>
+        <AuthenticationRedirect />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string GetUserInitials()
+    {
+        var user = HttpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            var name = user.FindFirst("name")?.Value ?? user.FindFirst("email")?.Value ?? "User";
+            var parts = name.Split(' ');
+            if (parts.Length >= 2)
+            {
+                return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+            }
+            return name.Substring(0, Math.Min(2, name.Length)).ToUpper();
+        }
+        return "LC";
+    }
+
+    private string GetUserName()
+    {
+        var user = HttpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            return user.FindFirst("name")?.Value ?? user.FindFirst("email")?.Value ?? "User";
+        }
+        return "Admin User";
+    }
+
+    private string GetUserRole()
+    {
+        var user = HttpContextAccessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            return user.FindFirst("role")?.Value ?? "Administrator";
+        }
+        return "Administrator";
+    }
+
+    private void LogoutAsync()
+    {
+        Navigation.NavigateTo("/logout");
+    }
+}

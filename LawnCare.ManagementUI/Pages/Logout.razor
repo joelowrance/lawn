@@ -1,0 +1,60 @@
+@page "/logout"
+@layout AuthLayout
+@using Microsoft.AspNetCore.Authentication
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@attribute [AllowAnonymous]
+
+<PageTitle>Logout - Lawn Care Management</PageTitle>
+
+<div class="logout-container">
+    <div class="logout-card">
+        <div class="logout-header">
+            <div class="logo-section">
+                <div class="logo-icon">🌱</div>
+                <h1 class="logo-title">Lawn Care Management</h1>
+            </div>
+            <p class="logout-subtitle">You have been successfully signed out</p>
+        </div>
+
+        <div class="logout-content">
+            <div class="logout-message">
+                <div class="message-icon">✅</div>
+                <h2 class="message-title">Goodbye!</h2>
+                <p class="message-text">Thank you for using Lawn Care Management. Your session has been securely terminated.</p>
+            </div>
+            
+            <div class="logout-actions">
+                <button class="login-again-button" @onclick="GoToLogin">
+                    <span class="button-icon">🔐</span>
+                    Sign In Again
+                </button>
+            </div>
+        </div>
+
+        <div class="logout-footer">
+            <p class="footer-text">
+                Need help? Contact our 
+                <a href="#" class="footer-link">support team</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        
+        if (httpContext != null)
+        {
+            // Sign out the user
+            await httpContext.SignOutAsync();
+        }
+    }
+
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+}

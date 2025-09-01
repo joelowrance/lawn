@@ -1,0 +1,21 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+@code {
+    protected override void OnInitialized()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        var currentPath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        
+        // Don't redirect if we're already on login, logout, or callback pages
+        if (httpContext?.User?.Identity?.IsAuthenticated != true && 
+            !currentPath.StartsWith("login") && 
+            !currentPath.StartsWith("logout") && 
+            !currentPath.StartsWith("callback") &&
+            !currentPath.StartsWith("auth0"))
+        {
+            Navigation.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(currentPath)}");
+        }
+    }
+}

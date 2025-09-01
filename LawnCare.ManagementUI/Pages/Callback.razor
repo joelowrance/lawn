@@ -1,0 +1,39 @@
+@page "/callback"
+@layout AuthLayout
+@using Microsoft.AspNetCore.Authentication
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@attribute [AllowAnonymous]
+
+<PageTitle>Authenticating - Lawn Care Management</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo-section">
+                <div class="logo-icon">🌱</div>
+                <h1 class="logo-title">Lawn Care Management</h1>
+            </div>
+            <p class="login-subtitle">Completing authentication...</p>
+        </div>
+
+        <div class="login-content">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Please wait while we complete your sign-in</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Auth0 should handle the callback automatically
+        // This page is just for display while the authentication completes
+        await Task.Delay(1000); // Give Auth0 time to process
+        
+        // Redirect to home page
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}
