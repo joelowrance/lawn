@@ -1,0 +1,216 @@
+@page "/scheduling"
+@attribute [Authorize]
+@using LawnCare.ManagementUI.Models
+@using LawnCare.ManagementUI.Services
+@inject ISchedulingService SchedulingService
+
+<PageTitle>Scheduling - Lawn Care Management</PageTitle>
+
+<div class="scheduling-dashboard">
+    <div class="dashboard-header">
+        <div class="header-content">
+            <h1 class="page-title">Scheduling Dashboard</h1>
+            <p class="page-subtitle">Manage your upcoming lawn care appointments and service requests</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary" @onclick="ShowNewJobModal">
+                <span class="btn-icon">➕</span>
+                Schedule New Job
+            </button>
+        </div>
+    </div>
+
+    <div class="filters-section">
+        <div class="filter-group">
+            <label class="filter-label">Filter by Status:</label>
+            <select class="filter-select" @bind="selectedStatus" @bind:after="FilterJobs">
+                <option value="">All Statuses</option>
+                <option value="@JobStatus.Scheduled">Scheduled</option>
+                <option value="@JobStatus.InProgress">In Progress</option>
+                <option value="@JobStatus.Completed">Completed</option>
+                <option value="@JobStatus.Cancelled">Cancelled</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label class="filter-label">Filter by Date:</label>
+            <input type="date" class="filter-input" @bind="selectedDate" @bind:after="FilterJobs" />
+        </div>
+        
+        <div class="filter-group">
+            <label class="filter-label">Search:</label>
+            <input type="text" class="filter-input" placeholder="Search jobs..." @bind="searchTerm" @oninput="FilterJobs" />
+        </div>
+    </div>
+
+    <div class="jobs-container">
+        @if (isLoading)
+        {
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading jobs...</p>
+            </div>
+        }
+        else if (filteredJobs.Any())
+        {
+            <div class="jobs-grid">
+                @foreach (var job in filteredJobs)
+                {
+                    <div class="job-card" @onclick="() => ShowJobDetails(job.Id)">
+                        <div class="job-header">
+                            <div class="service-type">
+                                <span class="service-icon">@GetServiceIcon(job.ServiceType)</span>
+                                <span class="service-name">@job.ServiceType</span>
+                            </div>
+                            <div class="job-status status-@job.Status.ToLower().Replace(" ", "-")">
+                                @job.Status
+                            </div>
+                        </div>
+                        
+                        <div class="job-content">
+                            <div class="customer-info">
+                                <h3 class="customer-name">@job.CustomerName</h3>
+                                <p class="property-address">@job.PropertyAddress</p>
+                            </div>
+                            
+                            <div class="job-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">📅 Date:</span>
+                                    <span class="detail-value">@job.ScheduledDate.ToString("MMM dd, yyyy")</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">🕐 Time:</span>
+                                    <span class="detail-value">@DateTime.Today.Add(job.ScheduledTime).ToString("h:mm tt")</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">⏱️ Duration:</span>
+                                    <span class="detail-value">@job.EstimatedDuration.ToString(@"h\:mm")</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">👷 Technician:</span>
+                                    <span class="detail-value">@job.AssignedTechnician</span>
+                                </div>
+                            </div>
+                            
+                            <div class="job-footer">
+                                <div class="priority-badge priority-@job.Priority.ToLower()">
+                                    @job.Priority
+                                </div>
+                                <div class="cost-info">
+                                    $@job.EstimatedCost.ToString("F2")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">📅</div>
+                <h3>No jobs found</h3>
+                <p>No jobs match your current filters. Try adjusting your search criteria.</p>
+                <button class="btn btn-primary" @onclick="ClearFilters">Clear Filters</button>
+            </div>
+        }
+    </div>
+</div>
+
+@if (showJobModal)
+{
+    <JobDetailModal JobId="selectedJobId" OnClose="CloseJobModal" />
+}
+
+@code {
+    private List<ServiceRequest> allJobs = new();
+    private List<ServiceRequest> filteredJobs = new();
+    private bool isLoading = true;
+    private bool showJobModal = false;
+    private int selectedJobId = 0;
+    
+    private string selectedStatus = "";
+    private DateTime? selectedDate;
+    private string searchTerm = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadJobs();
+    }
+
+    private async Task LoadJobs()
+    {
+        isLoading = true;
+        allJobs = await SchedulingService.GetUpcomingJobsAsync();
+        FilterJobs();
+        isLoading = false;
+    }
+
+    private void FilterJobs()
+    {
+        var query = allJobs.AsEnumerable();
+
+        if (!string.IsNullOrEmpty(selectedStatus))
+        {
+            query = query.Where(job => job.Status == selectedStatus);
+        }
+
+        if (selectedDate.HasValue)
+        {
+            query = query.Where(job => job.ScheduledDate.Date == selectedDate.Value.Date);
+        }
+
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            var term = searchTerm.ToLower();
+            query = query.Where(job => 
+                job.CustomerName.ToLower().Contains(term) ||
+                job.PropertyAddress.ToLower().Contains(term) ||
+                job.ServiceType.ToLower().Contains(term) ||
+                job.AssignedTechnician.ToLower().Contains(term));
+        }
+
+        filteredJobs = query.ToList();
+    }
+
+    private void ShowJobDetails(int jobId)
+    {
+        selectedJobId = jobId;
+        showJobModal = true;
+    }
+
+    private void CloseJobModal()
+    {
+        showJobModal = false;
+        selectedJobId = 0;
+    }
+
+    private void ShowNewJobModal()
+    {
+        // TODO: Implement new job modal
+    }
+
+    private void ClearFilters()
+    {
+        selectedStatus = "";
+        selectedDate = null;
+        searchTerm = "";
+        FilterJobs();
+    }
+
+    private string GetServiceIcon(string serviceType)
+    {
+        return serviceType switch
+        {
+            "Lawn Mowing" => "🌱",
+            "Tree Pruning" => "🌳",
+            "Fertilization" => "🌿",
+            "Weed Control" => "🌾",
+            "Leaf Cleanup" => "🍂",
+            "Snow Removal" => "❄️",
+            "Aeration" => "🕳️",
+            "Pest Control" => "🐛",
+            _ => "🔧"
+        };
+    }
+}

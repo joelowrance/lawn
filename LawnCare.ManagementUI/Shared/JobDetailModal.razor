@@ -1,0 +1,220 @@
+@using LawnCare.ManagementUI.Models
+@using LawnCare.ManagementUI.Services
+@inject ISchedulingService SchedulingService
+
+<div class="modal-overlay @(IsVisible ? "show" : "")" @onclick="HandleOverlayClick">
+    <div class="modal-container" @onclick:stopPropagation="true">
+        @if (job != null)
+        {
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="service-icon">@GetServiceIcon(job.ServiceType)</span>
+                    <h2>@job.ServiceType - @job.CustomerName</h2>
+                </div>
+                <button class="modal-close" @onclick="CloseModal">
+                    <span>✕</span>
+                </button>
+            </div>
+
+            <div class="modal-content">
+                <div class="job-info-grid">
+                    <div class="info-section">
+                        <h3 class="section-title">📋 Job Details</h3>
+                        <div class="info-item">
+                            <span class="info-label">Service Type:</span>
+                            <span class="info-value">@job.ServiceType</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Description:</span>
+                            <span class="info-value">@job.Description</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span class="info-value status-badge status-@job.Status.ToLower().Replace(" ", "-")">@job.Status</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Priority:</span>
+                            <span class="info-value priority-badge priority-@job.Priority.ToLower()">@job.Priority</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Estimated Cost:</span>
+                            <span class="info-value cost-value">$@job.EstimatedCost.ToString("F2")</span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3 class="section-title">📅 Schedule Information</h3>
+                        <div class="info-item">
+                            <span class="info-label">Scheduled Date:</span>
+                            <span class="info-value">@job.ScheduledDate.ToString("dddd, MMMM dd, yyyy")</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Scheduled Time:</span>
+                            <span class="info-value">@DateTime.Today.Add(job.ScheduledTime).ToString("h:mm tt")</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Estimated Duration:</span>
+                            <span class="info-value">@job.EstimatedDuration.ToString(@"h\:mm")</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Assigned Technician:</span>
+                            <span class="info-value">@job.AssignedTechnician</span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h3 class="section-title">👥 Customer Information</h3>
+                        <div class="info-item">
+                            <span class="info-label">Customer Name:</span>
+                            <span class="info-value">@job.CustomerName</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Property Address:</span>
+                            <span class="info-value">@job.PropertyAddress</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Property Size:</span>
+                            <span class="info-value">@job.PropertySize</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Contact Phone:</span>
+                            <span class="info-value">@job.ContactPhone</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Contact Email:</span>
+                            <span class="info-value">@job.ContactEmail</span>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(job.Notes))
+                    {
+                        <div class="info-section full-width">
+                            <h3 class="section-title">📝 Notes</h3>
+                            <div class="notes-content">
+                                @job.Notes
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(job.SpecialInstructions))
+                    {
+                        <div class="info-section full-width">
+                            <h3 class="section-title">⚠️ Special Instructions</h3>
+                            <div class="special-instructions">
+                                @job.SpecialInstructions
+                            </div>
+                        </div>
+                    }
+
+                    <div class="info-section full-width">
+                        <h3 class="section-title">📊 Job History</h3>
+                        <div class="history-item">
+                            <span class="history-label">Created:</span>
+                            <span class="history-value">@job.CreatedDate.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
+                        </div>
+                        <div class="history-item">
+                            <span class="history-label">Last Modified:</span>
+                            <span class="history-value">@job.LastModified.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="footer-actions">
+                    <button class="btn btn-secondary" @onclick="CloseModal">
+                        Close
+                    </button>
+                    <button class="btn btn-primary" @onclick="EditJob">
+                        <span class="btn-icon">✏️</span>
+                        Edit Job
+                    </button>
+                    <button class="btn btn-success" @onclick="MarkComplete" disabled="@(job.Status == JobStatus.Completed)">
+                        <span class="btn-icon">✅</span>
+                        Mark Complete
+                    </button>
+                </div>
+            </div>
+        }
+        else if (isLoading)
+        {
+            <div class="modal-loading">
+                <div class="loading-spinner"></div>
+                <p>Loading job details...</p>
+            </div>
+        }
+        else
+        {
+            <div class="modal-error">
+                <div class="error-icon">❌</div>
+                <h3>Job Not Found</h3>
+                <p>The requested job could not be found.</p>
+                <button class="btn btn-primary" @onclick="CloseModal">Close</button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int JobId { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private ServiceRequest? job;
+    private bool isLoading = true;
+    private bool IsVisible => job != null || isLoading;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (JobId > 0)
+        {
+            await LoadJobDetails();
+        }
+    }
+
+    private async Task LoadJobDetails()
+    {
+        isLoading = true;
+        job = await SchedulingService.GetJobByIdAsync(JobId);
+        isLoading = false;
+    }
+
+    private async Task CloseModal()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async void HandleOverlayClick()
+    {
+        await CloseModal();
+    }
+
+    private async Task EditJob()
+    {
+        // TODO: Implement edit job functionality
+        Console.WriteLine($"Edit job {JobId}");
+        await Task.CompletedTask;
+    }
+
+    private async Task MarkComplete()
+    {
+        // TODO: Implement mark complete functionality
+        Console.WriteLine($"Mark job {JobId} as complete");
+        await Task.CompletedTask;
+    }
+
+    private string GetServiceIcon(string serviceType)
+    {
+        return serviceType switch
+        {
+            "Lawn Mowing" => "🌱",
+            "Tree Pruning" => "🌳",
+            "Fertilization" => "🌿",
+            "Weed Control" => "🌾",
+            "Leaf Cleanup" => "🍂",
+            "Snow Removal" => "❄️",
+            "Aeration" => "🕳️",
+            "Pest Control" => "🐛",
+            _ => "🔧"
+        };
+    }
+}

@@ -31,6 +31,9 @@ builder.Services.AddScoped<LawnCare.ManagementUI.Shared.CustomAuthenticationStat
 builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider>(provider => 
     provider.GetRequiredService<LawnCare.ManagementUI.Shared.CustomAuthenticationStateProvider>());
 
+// Add application services
+builder.Services.AddScoped<LawnCare.ManagementUI.Services.ISchedulingService, LawnCare.ManagementUI.Services.SchedulingService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
