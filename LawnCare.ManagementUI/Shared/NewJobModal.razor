@@ -306,7 +306,7 @@
         
         // Test validation
         var validationContext = new ValidationContext(JobEstimate);
-        var validationResults = new List<ValidationResult>();
+        var validationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
         bool isValid = Validator.TryValidateObject(JobEstimate, validationContext, validationResults, true);
         Console.WriteLine($"Initial form validation result: {isValid}");
         if (!isValid)

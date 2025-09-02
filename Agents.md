@@ -3,6 +3,9 @@
 ## Project Overview
 This is a distributed, multi-tenant SaaS application serving lawn care and tree specialist companies. The system provides comprehensive business management tools including scheduling, customer management, invoicing, and service tracking.
 
+## Setup
+This solution uses `directory.build.props` and `directory.package.props`
+
 ## Architecture
 - **Pattern**: Multi-tenant distributed architecture
 - **Primary Language**: C# (.NET 8+)

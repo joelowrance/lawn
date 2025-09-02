@@ -16,6 +16,7 @@
 		<PackageVersion Include="MassTransit" Version="$(MassTransitVersion)" />
 		<PackageVersion Include="MassTransit.RabbitMQ" Version="$(MassTransitVersion)" />
 		<PackageVersion Include="MassTransit.EntityFrameworkCore" Version="$(MassTransitVersion)"/>
+		<PackageVersion Include="Bogus" Version="35.6.1" />
 	</ItemGroup>
 	<ItemGroup Label="EntityFramework">
 		<PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfVersion)" />
