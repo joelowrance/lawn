@@ -57,7 +57,7 @@ var postgreSQL = builder.AddPostgres(
  // 	.WithReference(customerDatabase)
  // 	.WaitFor(customerDatabase);
 
- builder.AddProject<Projects.LawnCare_CoreApi>("core-api")
+ var coreApi = builder.AddProject<Projects.LawnCare_CoreApi>("core-api")
 	 .WithReference(rabbitMq)
 	 .WaitFor(rabbitMq)
 	 .WithReference(coreApiDatabase)
@@ -68,6 +68,13 @@ var postgreSQL = builder.AddPostgres(
 	 .WaitFor(rabbitMq)
 	 .WithReference(communicationsDb)
 	 .WaitFor(communicationsDb)
-	 .WithReference(mailDev);
+	 .WithReference(mailDev
+	 );
+
+ builder.AddProject<Projects.LawnCare_ManagementUI>("management-ui")
+	 .WithReference(coreApi)
+	 .WaitFor(coreApi)
+	 .WithEnvironment("CoreApi__BaseUrl", coreApi.GetEndpoint("https"));
+
 
 builder.Build().Run();

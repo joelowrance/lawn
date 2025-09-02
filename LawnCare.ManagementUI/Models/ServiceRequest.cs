@@ -2,7 +2,7 @@ namespace LawnCare.ManagementUI.Models;
 
 public class ServiceRequest
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string CustomerName { get; set; } = string.Empty;
     public string PropertyAddress { get; set; } = string.Empty;
     public string ServiceType { get; set; } = string.Empty;

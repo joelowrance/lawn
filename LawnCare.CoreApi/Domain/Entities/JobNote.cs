@@ -1,4 +1,4 @@
-﻿using LawnCare.CoreApi.Domain.Common;
+using LawnCare.CoreApi.Domain.Common;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -20,7 +20,7 @@ namespace LawnCare.CoreApi.Domain.Entities
 		public JobNote(JobId jobId, string note)
 		{
 			JobId = jobId ?? throw new ArgumentNullException(nameof(jobId));
-			Note = note ?? throw new ArgumentNullException(nameof(note));;
+			Note = note ?? throw new ArgumentNullException(nameof(note));
 		}
 	}
 	

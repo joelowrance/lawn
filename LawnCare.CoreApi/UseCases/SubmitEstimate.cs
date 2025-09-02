@@ -1,4 +1,4 @@
-﻿using LawnCare.CoreApi.Domain.Common;
+using LawnCare.CoreApi.Domain.Common;
 using LawnCare.CoreApi.Domain.Entities;
 using LawnCare.CoreApi.Domain.ValueObjects;
 using LawnCare.CoreApi.Infrastructure.Database;
@@ -13,24 +13,23 @@ namespace LawnCare.CoreApi.UseCases;
 
 public class SubmitEstimate : IEndpoint
 {
-
 	/// <param name="app"></param>
 	public void MapEndpoint(IEndpointRouteBuilder app)
 	{
 		app.MapPost("/estimate", async (IMediator mediator, JobEstimate estimate) =>
 		{
-			await mediator.Send(new SubmitEstimateCommand(estimate));
-			// needs a better result than just a status code
-			return Results.Created();
+			var result = await mediator.Send(new SubmitEstimateCommand(estimate));
+			return Results.Created($"/jobs/{result.JobId}", result);
 		});
 	}
 }
 
 
-public record SubmitEstimateCommand(JobEstimate Estimate) : IRequest;
+public record SubmitEstimateCommand(JobEstimate Estimate) : IRequest<SubmitEstimateResult>;
 
- 
-public record SubmitEstimateCommandHandler : IRequestHandler<SubmitEstimateCommand>
+public record SubmitEstimateResult(JobId JobId, string CustomerName, string PropertyAddress);
+
+public record SubmitEstimateCommandHandler : IRequestHandler<SubmitEstimateCommand, SubmitEstimateResult>
 {
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly CoreDbContext _dbContext;
@@ -41,7 +40,7 @@ public record SubmitEstimateCommandHandler : IRequestHandler<SubmitEstimateComma
 		_dbContext = dbContext;
 	}
 
-	public async Task Handle(SubmitEstimateCommand request, CancellationToken cancellationToken)
+	public async Task<SubmitEstimateResult> Handle(SubmitEstimateCommand request, CancellationToken cancellationToken)
 	{
 		// TODO normalize phones
 		var customer = await _dbContext.Customers
@@ -73,12 +72,28 @@ public record SubmitEstimateCommandHandler : IRequestHandler<SubmitEstimateComma
 		}
 
 		var job = new Job(request.Estimate.ScheduledDate.ToUniversalTime(), JobPriority.Normal, new Money(request.Estimate.EstimatedCost), location.LocationId);
+		
+		// Add service items from the estimate
+		foreach (var service in request.Estimate.Services)
+		{
+			job.AddService(service.ServiceName, 1, service.Notes, new Money(service.Cost));
+		}
+		
+		// Add description as a note
+		if (!string.IsNullOrEmpty(request.Estimate.Description))
+		{
+			job.AddNote(request.Estimate.Description);
+		}
+		
 		_dbContext.Jobs.Add(job);
 		
 		await _unitOfWork.SaveChangesAsync(cancellationToken);
+		
+		var customerName = $"{customer.FirstName} {customer.LastName}";
+		var propertyAddress = $"{location.Street1}, {location.City}, {location.State} {location.Postcode.Value}";
+		
+		return new SubmitEstimateResult(job.JobId, customerName, propertyAddress);
 	}
-	
-	 
 }
 
 /// <summary>
@@ -109,4 +124,13 @@ public class JobEstimate
 	public List<JobServiceItem> Services { get; set; } = [];
 }
 
-public record JobEstimateLineItem(string ServiceName, int Quantity, string Comment, decimal Price); 
+public class JobServiceItem
+{
+	public string ServiceName { get; set; } = string.Empty;
+	public string Description { get; set; } = string.Empty;
+	public decimal Cost { get; set; }
+	public int DurationMinutes { get; set; }
+	public string Notes { get; set; } = string.Empty;
+}
+
+public record JobEstimateLineItem(string ServiceName, int Quantity, string Comment, decimal Price);

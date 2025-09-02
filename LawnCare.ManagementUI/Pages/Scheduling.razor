@@ -119,7 +119,12 @@
 
 @if (showJobModal)
 {
-    <JobDetailModal JobId="selectedJobId" OnClose="CloseJobModal" />
+    <JobDetailModal JobId="(Guid)selectedJobId!" OnClose="CloseJobModal" />
+}
+
+@if (showNewJobModal)
+{
+    <NewJobModal IsVisible="showNewJobModal" OnClose="CloseNewJobModal" OnJobCreated="HandleJobCreated" />
 }
 
 @code {
@@ -127,7 +132,8 @@
     private List<ServiceRequest> filteredJobs = new();
     private bool isLoading = true;
     private bool showJobModal = false;
-    private int selectedJobId = 0;
+    private bool showNewJobModal = false;
+    private Guid? selectedJobId = Guid.Empty;
     
     private string selectedStatus = "";
     private DateTime? selectedDate;
@@ -173,7 +179,7 @@
         filteredJobs = query.ToList();
     }
 
-    private void ShowJobDetails(int jobId)
+    private void ShowJobDetails(Guid jobId)
     {
         selectedJobId = jobId;
         showJobModal = true;
@@ -182,12 +188,36 @@
     private void CloseJobModal()
     {
         showJobModal = false;
-        selectedJobId = 0;
+        selectedJobId = null;
     }
 
     private void ShowNewJobModal()
     {
-        // TODO: Implement new job modal
+        showNewJobModal = true;
+    }
+
+    private void CloseNewJobModal()
+    {
+        showNewJobModal = false;
+    }
+
+    private async Task HandleJobCreated(JobEstimate jobEstimate)
+    {
+        try
+        {
+            Console.WriteLine($"Creating job estimate for customer: {jobEstimate.CustomerFirstName} {jobEstimate.CustomerLastName}");
+            var newJob = await SchedulingService.CreateJobEstimateAsync(jobEstimate);
+            Console.WriteLine($"Job created successfully with ID: {newJob.Id}");
+            await LoadJobs(); // Refresh the jobs list
+            showNewJobModal = false;
+        }
+        catch (Exception ex)
+        {
+            // Handle error - could show a toast notification
+            Console.WriteLine($"Error creating job: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            // Keep the modal open so user can see the error and try again
+        }
     }
 
     private void ClearFilters()

@@ -87,7 +87,11 @@ app.UseHttpsRedirection();
 // 		return forecast;
 // 	})
 // 	.WithName("GetWeatherForecast");
-app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+app.UseCors(x => x
+    .WithOrigins("https://localhost:7000", "http://localhost:5000", "https://localhost:5001)") // ManagementUI URLs
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .AllowCredentials());
 app.UseRouting();
 app.MapEndpoints();
 app.Run();

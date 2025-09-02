@@ -1,0 +1,11 @@
+﻿@using LawnCare.ManagementUI.Models
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="modal-overlay @(IsVisible ? "modal-visible" : "")" @onclick="HandleOverlayClick">
+    <div class="modal-container" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h2 class="modal-title">📋 Schedule New Job</h2>

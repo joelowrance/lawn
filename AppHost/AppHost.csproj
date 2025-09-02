@@ -18,6 +18,7 @@
       <ProjectReference Include="..\LawnCare.CoreApi\LawnCare.CoreApi.csproj" />
       <ProjectReference Include="..\LawnCare.CustomerApi\LawnCare.CustomerApi.csproj" />
       <ProjectReference Include="..\LawnCare.JobApi\LawnCare.JobApi.csproj" />
+      <ProjectReference Include="..\LawnCare.ManagementUI\LawnCare.ManagementUI.csproj" />
       <ProjectReference Include="..\LawnCare.StateMachine\LawnCare.StateMachine.csproj" />
     </ItemGroup>
 

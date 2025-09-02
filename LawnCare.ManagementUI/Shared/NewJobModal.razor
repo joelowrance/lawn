@@ -1,0 +1,338 @@
+@using LawnCare.ManagementUI.Models
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="modal-overlay @(IsVisible ? "modal-visible" : "")" @onclick="HandleOverlayClick">
+    <div class="modal-container" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h2 class="modal-title">📋 Schedule New Job</h2>
+            <button class="modal-close" @onclick="CloseModal">
+                <span class="close-icon">✕</span>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <EditForm Model="@JobEstimate" OnValidSubmit="@HandleSubmit" OnInvalidSubmit="@HandleInvalidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="validation-summary" />
+
+                <div class="form-sections">
+                    <!-- Customer Information Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">👤 Customer Information</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label required">First Name</label>
+                                <InputText class="form-input" @bind-Value="JobEstimate.CustomerFirstName" />
+                                <ValidationMessage For="@(() => JobEstimate.CustomerFirstName)" class="validation-message" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Last Name</label>
+                                <InputText class="form-input" @bind-Value="JobEstimate.CustomerLastName" />
+                                <ValidationMessage For="@(() => JobEstimate.CustomerLastName)" class="validation-message" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required">Address Line 1</label>
+                            <InputText class="form-input" @bind-Value="JobEstimate.CustomerAddress1" />
+                            <ValidationMessage For="@(() => JobEstimate.CustomerAddress1)" class="validation-message" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Address Line 2</label>
+                            <InputText class="form-input" @bind-Value="JobEstimate.CustomerAddress2" />
+                            <ValidationMessage For="@(() => JobEstimate.CustomerAddress2)" class="validation-message" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Address Line 3</label>
+                            <InputText class="form-input" @bind-Value="JobEstimate.CustomerAddress3" />
+                            <ValidationMessage For="@(() => JobEstimate.CustomerAddress3)" class="validation-message" />
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label required">City</label>
+                                <InputText class="form-input" @bind-Value="JobEstimate.CustomerCity" />
+                                <ValidationMessage For="@(() => JobEstimate.CustomerCity)" class="validation-message" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">State</label>
+                                <InputText class="form-input" @bind-Value="JobEstimate.CustomerState" maxlength="2" />
+                                <ValidationMessage For="@(() => JobEstimate.CustomerState)" class="validation-message" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">ZIP Code</label>
+                                <InputText class="form-input" @bind-Value="JobEstimate.CustomerZip" />
+                                <ValidationMessage For="@(() => JobEstimate.CustomerZip)" class="validation-message" />
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Home Phone</label>
+                                <InputText class="form-input" @bind-Value="JobEstimate.CustomerHomePhone" />
+                                <ValidationMessage For="@(() => JobEstimate.CustomerHomePhone)" class="validation-message" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Cell Phone</label>
+                                <InputText class="form-input" @bind-Value="JobEstimate.CustomerCellPhone" />
+                                <ValidationMessage For="@(() => JobEstimate.CustomerCellPhone)" class="validation-message" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <InputText class="form-input" @bind-Value="JobEstimate.CustomerEmail" />
+                            <ValidationMessage For="@(() => JobEstimate.CustomerEmail)" class="validation-message" />
+                        </div>
+                    </div>
+
+                    <!-- Job Details Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">📅 Job Details</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label required">Scheduled Date</label>
+                                <InputDate class="form-input" @bind-Value="ScheduledDate" />
+                                <ValidationMessage For="@(() => JobEstimate.ScheduledDate)" class="validation-message" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label required">Estimated Duration (minutes)</label>
+                                <InputNumber class="form-input" @bind-Value="JobEstimate.EstimatedDuration" />
+                                <ValidationMessage For="@(() => JobEstimate.EstimatedDuration)" class="validation-message" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required">Description</label>
+                            <InputTextArea class="form-input" @bind-Value="JobEstimate.Description" rows="3" />
+                            <ValidationMessage For="@(() => JobEstimate.Description)" class="validation-message" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required">Estimated Cost</label>
+                            <InputNumber class="form-input" @bind-Value="JobEstimate.EstimatedCost" step="0.01" />
+                            <ValidationMessage For="@(() => JobEstimate.EstimatedCost)" class="validation-message" />
+                        </div>
+                    </div>
+
+                    <!-- Services Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">🔧 Services</h3>
+                        <div class="services-container">
+                            @for (int i = 0; i < JobEstimate.Services.Count; i++)
+                            {
+                                var index = i;
+                                <div class="service-item">
+                                    <div class="service-header">
+                                        <h4>Service @(index + 1)</h4>
+                                        @if (JobEstimate.Services.Count > 1)
+                                        {
+                                            <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemoveService(index)">
+                                                Remove
+                                            </button>
+                                        }
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label required">Service Name</label>
+                                            <InputText class="form-input" @bind-Value="JobEstimate.Services[index].ServiceName" />
+                                            <ValidationMessage For="@(() => JobEstimate.Services[index].ServiceName)" class="validation-message" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label required">Cost</label>
+                                            <InputNumber class="form-input" @bind-Value="JobEstimate.Services[index].Cost" step="0.01" />
+                                            <ValidationMessage For="@(() => JobEstimate.Services[index].Cost)" class="validation-message" />
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label required">Duration (minutes)</label>
+                                            <InputNumber class="form-input" @bind-Value="JobEstimate.Services[index].DurationMinutes" />
+                                            <ValidationMessage For="@(() => JobEstimate.Services[index].DurationMinutes)" class="validation-message" />
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Description</label>
+                                        <InputText class="form-input" @bind-Value="JobEstimate.Services[index].Description" />
+                                        <ValidationMessage For="@(() => JobEstimate.Services[index].Description)" class="validation-message" />
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Notes</label>
+                                        <InputTextArea class="form-input" @bind-Value="JobEstimate.Services[index].Notes" rows="2" />
+                                        <ValidationMessage For="@(() => JobEstimate.Services[index].Notes)" class="validation-message" />
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        
+                        <button type="button" class="btn btn-secondary" @onclick="AddService">
+                            ➕ Add Service
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-warning" @onclick="TestSubmit">
+                        Test Submit
+                    </button>
+                    <button type="submit" class="btn btn-primary" disabled="@IsSubmitting" @onclick="OnSubmitButtonClick">
+                        @if (IsSubmitting)
+                        {
+                            <span class="btn-spinner"></span>
+                            <span>Scheduling...</span>
+                        }
+                        else
+                        {
+                            <span>Schedule Job</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<JobEstimate> OnJobCreated { get; set; }
+
+    private JobEstimate JobEstimate = new();
+    private DateTime ScheduledDate = DateTime.Today.AddDays(1);
+    private bool IsSubmitting = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsVisible)
+        {
+            await InitializeFormAsync();
+        }
+    }
+
+    private async Task InitializeFormAsync()
+    {
+        Console.WriteLine("InitializeFormAsync called");
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.Identity?.Name ?? "anonymous-user";
+        
+        JobEstimate = new JobEstimate
+        {
+            UserId = userId,
+            ScheduledDate = DateTimeOffset.Now.AddDays(1),
+            CustomerFirstName = "John",
+            CustomerLastName = "Doe",
+            CustomerAddress1 = "123 Main St",
+            CustomerCity = "Springfield",
+            CustomerState = "IL",
+            CustomerZip = "62701",
+            CustomerHomePhone = "(555) 123-4567",
+            CustomerEmail = "john.doe@example.com",
+            EstimatedDuration = 120,
+            EstimatedCost = 150.00m,
+            Description = "Standard lawn maintenance service",
+            Services = new List<JobServiceItem>
+            {
+	            new JobServiceItem
+	            {
+		            ServiceName = "Lawn Mowing",
+		            Description = "Full lawn mowing service",
+		            Cost = 75.00m,
+		            DurationMinutes = 60,
+		            Notes = "Include edging and cleanup"
+	            }
+            }
+        };
+        ScheduledDate = JobEstimate.ScheduledDate.DateTime;
+        
+        // Test validation
+        var validationContext = new ValidationContext(JobEstimate);
+        var validationResults = new List<ValidationResult>();
+        bool isValid = Validator.TryValidateObject(JobEstimate, validationContext, validationResults, true);
+        Console.WriteLine($"Initial form validation result: {isValid}");
+        if (!isValid)
+        {
+            foreach (var error in validationResults)
+            {
+                Console.WriteLine($"Initial validation error: {error.ErrorMessage}");
+            }
+        }
+    }
+
+    private async Task HandleSubmit(EditContext editContext)
+    {
+        Console.WriteLine("HandleSubmit is firing - form is valid!");
+        IsSubmitting = true;
+        try
+        {
+            JobEstimate.ScheduledDate = new DateTimeOffset(ScheduledDate);
+            await OnJobCreated.InvokeAsync(JobEstimate);
+            await CloseModal();
+        }
+        catch (Exception ex)
+        {
+            // Handle error - could show a toast notification
+            Console.WriteLine($"Error creating job: {ex.Message}");
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
+    }
+
+
+    private void OnSubmitButtonClick()
+    {
+        Console.WriteLine("Submit button clicked!");
+        // This will help us see if the button click is being registered
+    }
+
+    private async Task TestSubmit()
+    {
+        Console.WriteLine("Test Submit button clicked!");
+        // Create a dummy EditContext since we're calling HandleSubmit directly
+        EditContext dummyContext = new EditContext(JobEstimate);
+        await HandleSubmit(dummyContext);
+    }
+
+    private async Task CloseModal()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleOverlayClick()
+    {
+        await CloseModal();
+    }
+
+    private void AddService()
+    {
+        JobEstimate.Services.Add(new JobServiceItem());
+    }
+
+    private void RemoveService(int index)
+    {
+        if (JobEstimate.Services.Count > 1)
+        {
+            JobEstimate.Services.RemoveAt(index);
+        }
+    }
+
+    private void HandleInvalidSubmit(EditContext context)
+    {
+        Console.WriteLine("Form submission failed validation");
+        foreach (var validationMessage in context.GetValidationMessages())
+        {
+            Console.WriteLine($"Validation error: {validationMessage}");
+        }
+    }
+}

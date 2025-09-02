@@ -31,6 +31,14 @@ builder.Services.AddScoped<LawnCare.ManagementUI.Shared.CustomAuthenticationStat
 builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider>(provider => 
     provider.GetRequiredService<LawnCare.ManagementUI.Shared.CustomAuthenticationStateProvider>());
 
+// Add HTTP client for CoreAPI
+builder.Services.AddHttpClient<LawnCare.ManagementUI.Services.ICoreApiService, LawnCare.ManagementUI.Services.CoreApiService>(client =>
+{
+    var coreApiUrl = builder.Configuration["CoreApi:BaseUrl"] ?? "https://localhost:7103";
+    client.BaseAddress = new Uri(coreApiUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 // Add application services
 builder.Services.AddScoped<LawnCare.ManagementUI.Services.ISchedulingService, LawnCare.ManagementUI.Services.SchedulingService>();
 
