@@ -2,6 +2,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
+@using Bogus
 @inject IJSRuntime JSRuntime
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -225,33 +226,82 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var userId = authState.User.Identity?.Name ?? "anonymous-user";
         
+        // Initialize Bogus faker
+        var faker = new Faker();
+        
+        // Generate future date (1-30 days from now)
+        var futureDate = DateTimeOffset.Now.AddDays(faker.Random.Int(1, 30));
+        
+        // Lawn care service names and descriptions
+        var lawnCareServices = new[]
+        {
+            ("Lawn Mowing", "Complete lawn mowing with edging and cleanup"),
+            ("Fertilization", "Professional lawn fertilization treatment"),
+            ("Weed Control", "Pre and post-emergent weed control application"),
+            ("Aeration", "Core aeration to improve soil health"),
+            ("Overseeding", "Overseeding to thicken existing lawn"),
+            ("Tree Pruning", "Professional tree pruning and trimming"),
+            ("Leaf Cleanup", "Fall leaf removal and disposal"),
+            ("Mulching", "Garden bed mulching and maintenance"),
+            ("Hedge Trimming", "Hedge and shrub trimming service"),
+            ("Pest Control", "Lawn pest and grub control treatment")
+        };
+        
+        var selectedService = faker.PickRandom(lawnCareServices);
+        var serviceCost = faker.Random.Decimal(50, 300);
+        var serviceDuration = faker.Random.Int(30, 180);
+        
         JobEstimate = new JobEstimate
         {
             UserId = userId,
-            ScheduledDate = DateTimeOffset.Now.AddDays(1),
-            CustomerFirstName = "John",
-            CustomerLastName = "Doe",
-            CustomerAddress1 = "123 Main St",
-            CustomerCity = "Springfield",
-            CustomerState = "IL",
-            CustomerZip = "62701",
-            CustomerHomePhone = "(555) 123-4567",
-            CustomerEmail = "john.doe@example.com",
-            EstimatedDuration = 120,
-            EstimatedCost = 150.00m,
-            Description = "Standard lawn maintenance service",
+            ScheduledDate = futureDate,
+            CustomerFirstName = faker.Name.FirstName(),
+            CustomerLastName = faker.Name.LastName(),
+            CustomerAddress1 = faker.Address.StreetAddress(),
+            CustomerAddress2 = faker.Random.Bool(0.3f) ? faker.Address.SecondaryAddress() : string.Empty,
+            CustomerAddress3 = faker.Random.Bool(0.1f) ? faker.Address.BuildingNumber() : string.Empty,
+            CustomerCity = faker.Address.City(),
+            CustomerState = faker.Address.StateAbbr(),
+            CustomerZip = faker.Address.ZipCode(),
+            CustomerHomePhone = faker.Random.Bool(0.7f) ? faker.Phone.PhoneNumber("(###) ###-####") : string.Empty,
+            CustomerCellPhone = faker.Phone.PhoneNumber("(###) ###-####"),
+            CustomerEmail = faker.Internet.Email(),
+            EstimatedDuration = serviceDuration,
+            EstimatedCost = serviceCost,
+            Description = faker.PickRandom(new[]
+            {
+                "Regular lawn maintenance service",
+                "Seasonal lawn care treatment",
+                "Property beautification service",
+                "Landscape maintenance and care",
+                "Professional lawn health program",
+                "Garden and lawn restoration",
+                "Comprehensive property care",
+                "Specialized lawn treatment"
+            }),
             Services = new List<JobServiceItem>
             {
-	            new JobServiceItem
-	            {
-		            ServiceName = "Lawn Mowing",
-		            Description = "Full lawn mowing service",
-		            Cost = 75.00m,
-		            DurationMinutes = 60,
-		            Notes = "Include edging and cleanup"
-	            }
+                new JobServiceItem
+                {
+                    ServiceName = selectedService.Item1,
+                    Description = selectedService.Item2,
+                    Cost = serviceCost,
+                    DurationMinutes = serviceDuration,
+                    Notes = faker.PickRandom(new[]
+                    {
+                        "Include edging and cleanup",
+                        "Weather permitting",
+                        "Customer prefers morning service",
+                        "Access via side gate",
+                        "Pet-friendly products only",
+                        "Include detailed service report",
+                        "Customer will be present",
+                        "Leave service summary on door"
+                    })
+                }
             }
         };
+        
         ScheduledDate = JobEstimate.ScheduledDate.DateTime;
         
         // Test validation

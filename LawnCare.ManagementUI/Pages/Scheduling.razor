@@ -3,6 +3,7 @@
 @using LawnCare.ManagementUI.Models
 @using LawnCare.ManagementUI.Services
 @inject ISchedulingService SchedulingService
+@inject ILogger<Scheduling> Logger
 
 <PageTitle>Scheduling - Lawn Care Management</PageTitle>
 
@@ -128,7 +129,7 @@
 }
 
 @code {
-    private List<ServiceRequest> allJobs = new();
+	
     private List<ServiceRequest> filteredJobs = new();
     private bool isLoading = true;
     private bool showJobModal = false;
@@ -146,37 +147,42 @@
 
     private async Task LoadJobs()
     {
-        isLoading = true;
-        allJobs = await SchedulingService.GetUpcomingJobsAsync();
-        FilterJobs();
-        isLoading = false;
+        await FilterJobs();
     }
 
-    private void FilterJobs()
+    private async Task FilterJobs()
     {
-        var query = allJobs.AsEnumerable();
-
-        if (!string.IsNullOrEmpty(selectedStatus))
+        isLoading = true;
+        
+        try
         {
-            query = query.Where(job => job.Status == selectedStatus);
-        }
+            // Use server-side filtering with the new unified search
+            filteredJobs = await SchedulingService.SearchJobsAsync(
+                status: string.IsNullOrEmpty(selectedStatus) ? null : selectedStatus,
+                date: selectedDate,
+                upcoming: true // Always get upcoming jobs for the scheduling dashboard
+            );
 
-        if (selectedDate.HasValue)
+            // Apply client-side text search since it's not supported by the API yet
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var term = searchTerm.ToLower();
+                filteredJobs = filteredJobs.Where(job => 
+                    job.CustomerName.ToLower().Contains(term) ||
+                    job.PropertyAddress.ToLower().Contains(term) ||
+                    job.ServiceType.ToLower().Contains(term) ||
+                    job.AssignedTechnician.ToLower().Contains(term)).ToList();
+            }
+        }
+        catch (Exception ex)
         {
-            query = query.Where(job => job.ScheduledDate.Date == selectedDate.Value.Date);
+            Logger.LogError(ex, "Error filtering jobs");
+            filteredJobs = new List<ServiceRequest>();
         }
-
-        if (!string.IsNullOrEmpty(searchTerm))
+        finally
         {
-            var term = searchTerm.ToLower();
-            query = query.Where(job => 
-                job.CustomerName.ToLower().Contains(term) ||
-                job.PropertyAddress.ToLower().Contains(term) ||
-                job.ServiceType.ToLower().Contains(term) ||
-                job.AssignedTechnician.ToLower().Contains(term));
+            isLoading = false;
         }
-
-        filteredJobs = query.ToList();
     }
 
     private void ShowJobDetails(Guid jobId)
@@ -205,27 +211,26 @@
     {
         try
         {
-            Console.WriteLine($"Creating job estimate for customer: {jobEstimate.CustomerFirstName} {jobEstimate.CustomerLastName}");
+            Logger.LogInformation("Creating job estimate for customer: {FirstName} {LastName}", jobEstimate.CustomerFirstName, jobEstimate.CustomerLastName);
             var newJob = await SchedulingService.CreateJobEstimateAsync(jobEstimate);
-            Console.WriteLine($"Job created successfully with ID: {newJob.Id}");
+            Logger.LogInformation("Job created successfully with ID: {JobId}", newJob.Id);
             await LoadJobs(); // Refresh the jobs list
             showNewJobModal = false;
         }
         catch (Exception ex)
         {
             // Handle error - could show a toast notification
-            Console.WriteLine($"Error creating job: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            Logger.LogError(ex, "Error creating job for customer {FirstName} {LastName}", jobEstimate.CustomerFirstName, jobEstimate.CustomerLastName);
             // Keep the modal open so user can see the error and try again
         }
     }
 
-    private void ClearFilters()
+    private async Task ClearFilters()
     {
         selectedStatus = "";
         selectedDate = null;
         searchTerm = "";
-        FilterJobs();
+        await FilterJobs();
     }
 
     private string GetServiceIcon(string serviceType)

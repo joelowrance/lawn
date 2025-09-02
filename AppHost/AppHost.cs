@@ -63,13 +63,13 @@ var postgreSQL = builder.AddPostgres(
 	 .WithReference(coreApiDatabase)
 	 .WaitFor(coreApiDatabase);
 
- builder.AddProject<Projects.LawnCare_Communications>("communications")
-	 .WithReference(rabbitMq)
-	 .WaitFor(rabbitMq)
-	 .WithReference(communicationsDb)
-	 .WaitFor(communicationsDb)
-	 .WithReference(mailDev
-	 );
+ // builder.AddProject<Projects.LawnCare_Communications>("communications")
+	//  .WithReference(rabbitMq)
+	//  .WaitFor(rabbitMq)
+	//  .WithReference(communicationsDb)
+	//  .WaitFor(communicationsDb)
+	//  .WithReference(mailDev
+	//  );
 
  builder.AddProject<Projects.LawnCare_ManagementUI>("management-ui")
 	 .WithReference(coreApi)

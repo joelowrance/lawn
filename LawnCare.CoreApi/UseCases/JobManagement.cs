@@ -10,15 +10,34 @@ public class JobManagement : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
+        // New unified search endpoint
+        app.MapGet("/jobs/search", async (IMediator mediator, 
+            Guid? id = null,
+            string? status = null,
+            DateTime? date = null,
+            bool? upcoming = null) =>
+        {
+            var jobs = await mediator.Send(new SearchJobsQuery
+            {
+                JobId = id,
+                Status = status,
+                Date = date,
+                Upcoming = upcoming
+            });
+            return Results.Ok(jobs);
+        });
+
+        // Keep individual endpoints for backward compatibility, but route to search
         app.MapGet("/jobs/upcoming", async (IMediator mediator) =>
         {
-            var jobs = await mediator.Send(new GetUpcomingJobsQuery());
+            var jobs = await mediator.Send(new SearchJobsQuery { Upcoming = true });
             return Results.Ok(jobs);
         });
 
         app.MapGet("/jobs/{id:guid}", async (IMediator mediator, Guid id) =>
         {
-            var job = await mediator.Send(new GetJobByIdQuery(id));
+            var jobs = await mediator.Send(new SearchJobsQuery { JobId = id });
+            var job = jobs.FirstOrDefault();
             if (job == null)
                 return Results.NotFound();
             return Results.Ok(job);
@@ -26,56 +45,40 @@ public class JobManagement : IEndpoint
 
         app.MapGet("/jobs/date/{date:datetime}", async (IMediator mediator, DateTime date) =>
         {
-            var jobs = await mediator.Send(new GetJobsByDateQuery(date));
+            var jobs = await mediator.Send(new SearchJobsQuery { Date = date });
             return Results.Ok(jobs);
         });
 
         app.MapGet("/jobs/status/{status}", async (IMediator mediator, string status) =>
         {
-            var jobs = await mediator.Send(new GetJobsByStatusQuery(status));
+            var jobs = await mediator.Send(new SearchJobsQuery { Status = status });
             return Results.Ok(jobs);
         });
     }
 }
 
-// Queries
-public record GetUpcomingJobsQuery : IRequest<List<ServiceRequestDto>>;
-public record GetJobByIdQuery(Guid JobId) : IRequest<ServiceRequestDto?>;
-public record GetJobsByDateQuery(DateTime Date) : IRequest<List<ServiceRequestDto>>;
-public record GetJobsByStatusQuery(string Status) : IRequest<List<ServiceRequestDto>>;
-
-// Query Handlers
-public class GetUpcomingJobsQueryHandler : IRequestHandler<GetUpcomingJobsQuery, List<ServiceRequestDto>>
+// Unified Search Query
+public record SearchJobsQuery : IRequest<List<ServiceRequestDto>>
 {
-    private readonly CoreDbContext _dbContext;
+    public Guid? JobId { get; init; }
+    public string? Status { get; init; }
+    public DateTime? Date { get; init; }
+    public bool? Upcoming { get; init; }
+}
 
-    public GetUpcomingJobsQueryHandler(CoreDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
-
-    public async Task<List<ServiceRequestDto>> Handle(GetUpcomingJobsQuery request, CancellationToken cancellationToken)
-    {
-        var jobs = await _dbContext.Jobs
-            .Include(j => j.ServiceItems)
-            .Include(j => j.Notes)
-            .Where(j => j.RequestedServiceDate >= DateTimeOffset.UtcNow.Date)
-            .OrderBy(j => j.RequestedServiceDate)
-            .ToListAsync(cancellationToken);
-
-        return jobs.Select(MapToServiceRequestDto).ToList();
-    }
-
-    private ServiceRequestDto MapToServiceRequestDto(Job job)
+// Shared Mapping Service
+public class JobMappingService
+{
+    public ServiceRequestDto MapToServiceRequestDto(Job job, Location? location = null)
     {
         return new ServiceRequestDto
         {
             Id = job.JobId.Value,
-            CustomerName = "Customer Name", // TODO: Get from Location.Owner
-            PropertyAddress = "Property Address", // TODO: Get from Location
+            CustomerName = GetCustomerName(location),
+            PropertyAddress = GetPropertyAddress(location),
             ServiceType = job.ServiceItems.FirstOrDefault()?.ServiceName ?? "General Service",
             Description = job.Notes.FirstOrDefault()?.Note ?? "No description",
-            ScheduledDate = job.RequestedServiceDate?.DateTime ?? DateTime.Now,
+            ScheduledDate = job.RequestedServiceDate?.DateTime.ToUniversalTime() ?? DateTime.UtcNow,
             ScheduledTime = TimeSpan.FromHours(9), // Default time
             EstimatedDuration = TimeSpan.FromHours(1), // Default duration
             Status = job.Status.ToString(),
@@ -85,162 +88,137 @@ public class GetUpcomingJobsQueryHandler : IRequestHandler<GetUpcomingJobsQuery,
             Notes = string.Join("; ", job.Notes.Select(n => n.Note)),
             PropertySize = "TBD", // TODO: Add property size
             SpecialInstructions = string.Join("; ", job.ServiceItems.Select(s => s.Comment).Where(c => !string.IsNullOrEmpty(c))),
-            ContactPhone = "N/A", // TODO: Get from Location.Owner
-            ContactEmail = "N/A", // TODO: Get from Location.Owner
-            CreatedDate = job.CreatedAt.DateTime,
-            LastModified = job.UpdatedAt.DateTime
+            ContactPhone = GetContactPhone(location),
+            ContactEmail = GetContactEmail(location),
+            CreatedDate = job.CreatedAt.DateTime.ToUniversalTime(),
+            LastModified = job.UpdatedAt.DateTime.ToUniversalTime()
         };
     }
-}
 
-public class GetJobByIdQueryHandler : IRequestHandler<GetJobByIdQuery, ServiceRequestDto?>
-{
-    private readonly CoreDbContext _dbContext;
-
-    public GetJobByIdQueryHandler(CoreDbContext dbContext)
+    private static string GetCustomerName(Location? location)
     {
-        _dbContext = dbContext;
+        return location?.Owner != null 
+            ? $"{location.Owner.FirstName} {location.Owner.LastName}"
+            : "Customer Name";
     }
 
-    public async Task<ServiceRequestDto?> Handle(GetJobByIdQuery request, CancellationToken cancellationToken)
+    private static string GetPropertyAddress(Location? location)
     {
-        var job = await _dbContext.Jobs
+        return location != null 
+            ? $"{location.Street1}, {location.City}, {location.State} {location.Postcode.Value}"
+            : "Property Address";
+    }
+
+    private static string GetContactPhone(Location? location)
+    {
+        // TODO: Get from Location.Owner when phone field is available
+        return "N/A";
+    }
+
+    private static string GetContactEmail(Location? location)
+    {
+        // TODO: Get from Location.Owner when email field is available
+        return "N/A";
+    }
+}
+
+// Unified Search Query Handler
+public class SearchJobsQueryHandler : IRequestHandler<SearchJobsQuery, List<ServiceRequestDto>>
+{
+    private readonly CoreDbContext _dbContext;
+    private readonly JobMappingService _mappingService;
+    private readonly ILogger<SearchJobsQueryHandler> _logger;
+
+    public SearchJobsQueryHandler(CoreDbContext dbContext, JobMappingService mappingService, ILogger<SearchJobsQueryHandler> logger)
+    {
+        _dbContext = dbContext;
+        _mappingService = mappingService;
+        _logger = logger;
+    }
+
+    public async Task<List<ServiceRequestDto>> Handle(SearchJobsQuery request, CancellationToken cancellationToken)
+    {
+        // Build the base query with includes
+        var query = _dbContext.Jobs
             .Include(j => j.ServiceItems)
             .Include(j => j.Notes)
-            .FirstOrDefaultAsync(j => j.JobId.Value == request.JobId, cancellationToken);
+            .AsQueryable();
 
-        if (job == null)
-            return null;
-
-        return new ServiceRequestDto
+        // Apply filters based on request parameters
+        if (request.JobId.HasValue)
         {
-            Id = job.JobId.Value,
-            CustomerName = "Customer Name", // TODO: Get from Location.Owner
-            PropertyAddress = "Property Address", // TODO: Get from Location
-            ServiceType = job.ServiceItems.FirstOrDefault()?.ServiceName ?? "General Service",
-            Description = job.Notes.FirstOrDefault()?.Note ?? "No description",
-            ScheduledDate = job.RequestedServiceDate?.DateTime ?? DateTime.Now,
-            ScheduledTime = TimeSpan.FromHours(9),
-            EstimatedDuration = TimeSpan.FromHours(1),
-            Status = job.Status.ToString(),
-            Priority = job.Priority.ToString(),
-            AssignedTechnician = "Unassigned",
-            EstimatedCost = job.JobCost.Amount,
-            Notes = string.Join("; ", job.Notes.Select(n => n.Note)),
-            PropertySize = "TBD",
-            SpecialInstructions = string.Join("; ", job.ServiceItems.Select(s => s.Comment).Where(c => !string.IsNullOrEmpty(c))),
-            ContactPhone = "N/A",
-            ContactEmail = "N/A",
-            CreatedDate = job.CreatedAt.DateTime,
-            LastModified = job.UpdatedAt.DateTime
-        };
-    }
-}
+            var jobId = JobId.From(request.JobId.Value);
+            query = query.Where(j => j.JobId == jobId);
+        }
 
-public class GetJobsByDateQueryHandler : IRequestHandler<GetJobsByDateQuery, List<ServiceRequestDto>>
-{
-    private readonly CoreDbContext _dbContext;
-
-    public GetJobsByDateQueryHandler(CoreDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
-
-    public async Task<List<ServiceRequestDto>> Handle(GetJobsByDateQuery request, CancellationToken cancellationToken)
-    {
-        var targetDate = request.Date.Date;
-        var jobs = await _dbContext.Jobs
-            .Include(j => j.ServiceItems)
-            .Include(j => j.Notes)
-            .Where(j => j.RequestedServiceDate.HasValue && 
-                       j.RequestedServiceDate.Value.Date == targetDate)
-            .OrderBy(j => j.RequestedServiceDate)
-            .ToListAsync(cancellationToken);
-
-        return jobs.Select(job => new ServiceRequestDto
+        if (!string.IsNullOrEmpty(request.Status))
         {
-            Id = job.JobId.Value,
-            CustomerName = "Customer Name",
-            PropertyAddress = "Property Address",
-            ServiceType = job.ServiceItems.FirstOrDefault()?.ServiceName ?? "General Service",
-            Description = job.Notes.FirstOrDefault()?.Note ?? "No description",
-            ScheduledDate = job.RequestedServiceDate?.DateTime ?? DateTime.Now,
-            ScheduledTime = TimeSpan.FromHours(9),
-            EstimatedDuration = TimeSpan.FromHours(1),
-            Status = job.Status.ToString(),
-            Priority = job.Priority.ToString(),
-            AssignedTechnician = "Unassigned",
-            EstimatedCost = job.JobCost.Amount,
-            Notes = string.Join("; ", job.Notes.Select(n => n.Note)),
-            PropertySize = "TBD",
-            SpecialInstructions = string.Join("; ", job.ServiceItems.Select(s => s.Comment).Where(c => !string.IsNullOrEmpty(c))),
-            ContactPhone = "N/A",
-            ContactEmail = "N/A",
-            CreatedDate = job.CreatedAt.DateTime,
-            LastModified = job.UpdatedAt.DateTime
-        }).ToList();
-    }
-}
+            if (Enum.TryParse<JobStatus>(request.Status, out var status))
+            {
+                query = query.Where(j => j.Status == status);
+            }
+            else
+            {
+                // Invalid status, return empty list
+                return new List<ServiceRequestDto>();
+            }
+        }
 
-public class GetJobsByStatusQueryHandler : IRequestHandler<GetJobsByStatusQuery, List<ServiceRequestDto>>
-{
-    private readonly CoreDbContext _dbContext;
-
-    public GetJobsByStatusQueryHandler(CoreDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
-
-    public async Task<List<ServiceRequestDto>> Handle(GetJobsByStatusQuery request, CancellationToken cancellationToken)
-    {
-        if (!Enum.TryParse<JobStatus>(request.Status, out var status))
+        if (request.Date.HasValue)
         {
+            var targetDate = request.Date.Value.Date;
+            var startOfDay = new DateTimeOffset(targetDate, TimeSpan.Zero);
+            var endOfDay = startOfDay.AddDays(1);
+            
+            query = query.Where(j => j.RequestedServiceDate.HasValue && 
+                                  j.RequestedServiceDate >= startOfDay &&
+                                  j.RequestedServiceDate < endOfDay);
+        }
+
+        if (request.Upcoming == true)
+        {
+            // Ensure we're using UTC for PostgreSQL compatibility
+            var currentDate = DateTimeOffset.UtcNow.Date.ToUniversalTime();
+            query = query.Where(j => j.RequestedServiceDate >= currentDate);
+        }
+
+        // Order by requested service date
+        query = query.OrderBy(j => j.RequestedServiceDate);
+
+        // Execute the query
+        List<Job> jobs;
+        try
+        {
+            jobs = await query.ToListAsync(cancellationToken);
+
+            if (!jobs.Any())
+            {
+                return new List<ServiceRequestDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching jobs with parameters: jobId={JobId}, status={Status}, date={Date}, upcoming={Upcoming}", 
+                request.JobId, request.Status, request.Date, request.Upcoming);
             return new List<ServiceRequestDto>();
         }
-        
-        // well this got fucking messy quickly
-        var jobs = await _dbContext.Jobs
-            .Include(j => j.ServiceItems)
-            .Include(j => j.Notes)
-            .Where(j => j.Status == status)
-            .OrderBy(j => j.RequestedServiceDate)
+
+        // Load locations efficiently to avoid N+1 queries
+        var locationIds = jobs.Select(j => j.LocationId).Distinct().ToList();
+        var locations = await _dbContext.Locations
+            .Where(l => locationIds.Contains(l.LocationId))
+            .Include(l => l.Owner)
             .ToListAsync(cancellationToken);
 
-        var locationIds = jobs.Select(x => x.LocationId);
-        var locations = await _dbContext.Locations
-	        .Where(x => locationIds.Contains(x.LocationId))
-	        .Include(l => l.Owner)
-	        .ToListAsync(cancellationToken);
+        // Create a lookup for efficient location retrieval
+        var locationLookup = locations.ToDictionary(l => l.LocationId, l => l);
 
-        return jobs.Select(job =>
-	        {
-		        var location = locations.First(x => x.LocationId == job.LocationId);
-		        return new ServiceRequestDto
-		        {
-			        Id = job.JobId.Value,
-			        CustomerName = location.Owner.FirstName + " " + location.Owner.LastName,
-			        PropertyAddress =
-				        location.Street1 + ", " + location.City + ", " + location.State + " " + location.Postcode.Value,
-			        ServiceType = job.ServiceItems.FirstOrDefault()?.ServiceName ?? "General Service",
-			        Description = job.Notes.FirstOrDefault()?.Note ?? "No description",
-			        ScheduledDate = job.RequestedServiceDate?.DateTime ?? DateTime.Now,
-			        ScheduledTime = TimeSpan.FromHours(9),
-			        EstimatedDuration = TimeSpan.FromHours(1),
-			        Status = job.Status.ToString(),
-			        Priority = job.Priority.ToString(),
-			        AssignedTechnician = "Unassigned",
-			        EstimatedCost = job.JobCost.Amount,
-			        Notes = string.Join("; ", job.Notes.Select(n => n.Note)),
-			        PropertySize = "TBD",
-			        SpecialInstructions =
-				        string.Join("; ",
-					        job.ServiceItems.Select(s => s.Comment).Where(c => !string.IsNullOrEmpty(c))),
-			        ContactPhone = "N/A",
-			        ContactEmail = "N/A",
-			        CreatedDate = job.CreatedAt.DateTime,
-			        LastModified = job.UpdatedAt.DateTime
-		        };
-	        }).ToList();
+        // Map jobs to DTOs using the shared mapping service
+        return jobs.Select(job => 
+        {
+            var location = locationLookup.GetValueOrDefault(job.LocationId);
+            return _mappingService.MapToServiceRequestDto(job, location);
+        }).ToList();
     }
 }
 

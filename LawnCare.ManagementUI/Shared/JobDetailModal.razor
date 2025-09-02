@@ -1,6 +1,8 @@
 @using LawnCare.ManagementUI.Models
 @using LawnCare.ManagementUI.Services
+@using Microsoft.Extensions.Logging
 @inject ISchedulingService SchedulingService
+@inject ILogger<JobDetailModal> Logger
 
 <div class="modal-overlay @(IsVisible ? "show" : "")" @onclick="HandleOverlayClick">
     <div class="modal-container" @onclick:stopPropagation="true">
@@ -171,7 +173,7 @@
         }
         else
         {
-	        Console.WriteLine("Bad job id in JobDetailsModal");
+    	        Logger.LogWarning("Bad job id (empty GUID) in JobDetailsModal");
 	        await CloseModal();
         }
     }
@@ -179,16 +181,15 @@
     private async Task LoadJobDetails()
     {
         isLoading = true;
-        Console.WriteLine($"Loading job details for JobId: {JobId}");
+        Logger.LogInformation("Loading job details for JobId: {JobId}", JobId);
         try
         {
             job = await SchedulingService.GetJobByIdAsync(JobId);
-            Console.WriteLine($"Job loaded: {job?.Id}, Customer: {job?.CustomerName}");
+            Logger.LogInformation("Job loaded: {JobId}, Customer: {CustomerName}", job?.Id, job?.CustomerName);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading job details: {ex.Message}");
-            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            Logger.LogError(ex, "Error loading job details for JobId: {JobId}", JobId);
         }
         finally
         {
@@ -209,14 +210,14 @@
     private async Task EditJob()
     {
         // TODO: Implement edit job functionality
-        Console.WriteLine($"Edit job {JobId}");
+        Logger.LogInformation("Edit job {JobId}", JobId);
         await Task.CompletedTask;
     }
 
     private async Task MarkComplete()
     {
         // TODO: Implement mark complete functionality
-        Console.WriteLine($"Mark job {JobId} as complete");
+        Logger.LogInformation("Mark job {JobId} as complete", JobId);
         await Task.CompletedTask;
     }
 

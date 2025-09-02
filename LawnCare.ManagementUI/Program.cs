@@ -29,7 +29,7 @@ builder.Services.AddHttpContextAccessor();
 // Add custom authentication state provider
 builder.Services.AddScoped<LawnCare.ManagementUI.Shared.CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider>(provider => 
-    provider.GetRequiredService<LawnCare.ManagementUI.Shared.CustomAuthenticationStateProvider>());
+provider.GetRequiredService<LawnCare.ManagementUI.Shared.CustomAuthenticationStateProvider>());
 
 // Add HTTP client for CoreAPI
 builder.Services.AddHttpClient<LawnCare.ManagementUI.Services.ICoreApiService, LawnCare.ManagementUI.Services.CoreApiService>(client =>

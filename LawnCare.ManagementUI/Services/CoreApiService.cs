@@ -23,20 +23,7 @@ public class CoreApiService : ICoreApiService
 
     public async Task<List<ServiceRequest>> GetUpcomingJobsAsync()
     {
-        try
-        {
-            var response = await _httpClient.GetAsync("/jobs/upcoming");
-            response.EnsureSuccessStatusCode();
-            
-            var json = await response.Content.ReadAsStringAsync();
-            var jobs = JsonSerializer.Deserialize<List<ServiceRequest>>(json, _jsonOptions);
-            return jobs ?? new List<ServiceRequest>();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching upcoming jobs from CoreAPI");
-            return new List<ServiceRequest>();
-        }
+        return await SearchJobsAsync(upcoming: true);
     }
 
     public async Task<ServiceRequest?> GetJobByIdAsync(Guid id)
@@ -44,24 +31,16 @@ public class CoreApiService : ICoreApiService
         try
         {
             _logger.LogInformation("Fetching job {JobId} from CoreAPI", id);
-            var response = await _httpClient.GetAsync($"/jobs/{id}");
+            var jobs = await SearchJobsAsync(jobId: id);
             
-            _logger.LogInformation("Response status: {StatusCode} for job {JobId}", response.StatusCode, id);
-            
-            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            var job = jobs.FirstOrDefault();
+            if (job == null)
             {
                 _logger.LogWarning("Job {JobId} not found in CoreAPI", id);
                 return null;
             }
-                
-            response.EnsureSuccessStatusCode();
             
-            var json = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation("Received JSON response for job {JobId}: {Json}", id, json);
-            
-            var job = JsonSerializer.Deserialize<ServiceRequest>(json, _jsonOptions);
-            _logger.LogInformation("Deserialized job {JobId}: {JobDetails}", id, job?.CustomerName);
-            
+            _logger.LogInformation("Deserialized job {JobId}: {JobDetails}", id, job.CustomerName);
             return job;
         }
         catch (Exception ex)
@@ -73,28 +52,39 @@ public class CoreApiService : ICoreApiService
 
     public async Task<List<ServiceRequest>> GetJobsByDateAsync(DateTime date)
     {
-        try
-        {
-            var dateString = date.ToString("yyyy-MM-dd");
-            var response = await _httpClient.GetAsync($"/jobs/date/{dateString}");
-            response.EnsureSuccessStatusCode();
-            
-            var json = await response.Content.ReadAsStringAsync();
-            var jobs = JsonSerializer.Deserialize<List<ServiceRequest>>(json, _jsonOptions);
-            return jobs ?? new List<ServiceRequest>();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching jobs for date {Date} from CoreAPI", date);
-            return new List<ServiceRequest>();
-        }
+        return await SearchJobsAsync(date: date);
     }
 
     public async Task<List<ServiceRequest>> GetJobsByStatusAsync(string status)
     {
+        return await SearchJobsAsync(status: status);
+    }
+
+    // New unified search method
+    public async Task<List<ServiceRequest>> SearchJobsAsync(
+        Guid? jobId = null,
+        string? status = null,
+        DateTime? date = null,
+        bool? upcoming = null)
+    {
         try
         {
-            var response = await _httpClient.GetAsync($"/jobs/status/{Uri.EscapeDataString(status)}");
+            var queryParams = new List<string>();
+            
+            if (jobId.HasValue)
+                queryParams.Add($"id={jobId.Value}");
+            
+            if (!string.IsNullOrEmpty(status))
+                queryParams.Add($"status={Uri.EscapeDataString(status)}");
+            
+            if (date.HasValue)
+                queryParams.Add($"date={date.Value:yyyy-MM-dd}");
+            
+            if (upcoming.HasValue)
+                queryParams.Add($"upcoming={upcoming.Value.ToString().ToLower()}");
+            
+            var queryString = queryParams.Any() ? "?" + string.Join("&", queryParams) : "";
+            var response = await _httpClient.GetAsync($"/jobs/search{queryString}");
             response.EnsureSuccessStatusCode();
             
             var json = await response.Content.ReadAsStringAsync();
@@ -103,7 +93,8 @@ public class CoreApiService : ICoreApiService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching jobs with status {Status} from CoreAPI", status);
+            _logger.LogError(ex, "Error searching jobs with parameters: jobId={JobId}, status={Status}, date={Date}, upcoming={Upcoming}", 
+                jobId, status, date, upcoming);
             return new List<ServiceRequest>();
         }
     }

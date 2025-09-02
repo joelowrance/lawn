@@ -2,6 +2,7 @@ using FluentValidation;
 
 using LawnCare.CoreApi.Domain.Common;
 using LawnCare.CoreApi.Infrastructure.Database;
+using LawnCare.CoreApi.UseCases;
 using LawnCare.JobApi.Infrastructure.Database;
 using LawnCare.Shared.Endpoints;
 using LawnCare.Shared.EntityFramework;
@@ -50,6 +51,7 @@ builder.Services.AddSingleton<QueryHandlerMetrics>();
 //builder.Services.AddTransient<IJobRepository, JobRepository>();
 //builder.Services.AddTransient<ICustomerRepository, CustomerRepository>();
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
+builder.Services.AddTransient<JobMappingService, JobMappingService>();
 builder.Services.AddDbContext<CoreDbContext>(dbContextOptionsBuilder =>
 {
 	dbContextOptionsBuilder.UseNpgsql(

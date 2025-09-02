@@ -8,6 +8,11 @@ public interface ISchedulingService
     Task<ServiceRequest?> GetJobByIdAsync(Guid id);
     Task<List<ServiceRequest>> GetJobsByDateAsync(DateTime date);
     Task<List<ServiceRequest>> GetJobsByStatusAsync(string status);
+    Task<List<ServiceRequest>> SearchJobsAsync(
+        Guid? jobId = null,
+        string? status = null,
+        DateTime? date = null,
+        bool? upcoming = null);
     Task<ServiceRequest> CreateJobEstimateAsync(JobEstimate jobEstimate);
 }
 
@@ -70,6 +75,24 @@ public class SchedulingService : ISchedulingService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting jobs with status {Status} from CoreAPI", status);
+            return new List<ServiceRequest>();
+        }
+    }
+
+    public async Task<List<ServiceRequest>> SearchJobsAsync(
+        Guid? jobId = null,
+        string? status = null,
+        DateTime? date = null,
+        bool? upcoming = null)
+    {
+        try
+        {
+            return await _coreApiService.SearchJobsAsync(jobId, status, date, upcoming);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching jobs with parameters: jobId={JobId}, status={Status}, date={Date}, upcoming={Upcoming}", 
+                jobId, status, date, upcoming);
             return new List<ServiceRequest>();
         }
     }
