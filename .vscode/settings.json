@@ -1,0 +1,127 @@
+{
+    // Cursor AI Settings
+    "cursor.cpp.disabledLanguages": [],
+    "cursor.general.enableCodeActions": true,
+    "cursor.general.enableCodeLens": true,
+    "cursor.general.enableInlineCompletion": true,
+    "cursor.general.enableTabAutocomplete": true,
+    // Aggressive Code Completion
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": true
+    },
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.acceptSuggestionOnCommitCharacter": true,
+    "editor.acceptSuggestionOnEnter": "on",
+    "editor.tabCompletion": "on",
+    "editor.wordBasedSuggestions": "matchingDocuments",
+    "editor.parameterHints.enabled": true,
+    "editor.hover.enabled": true,
+    // C# Specific Settings
+    "omnisharp.enableEditorConfigSupport": true,
+    "omnisharp.enableImportCompletion": true,
+    "omnisharp.enableRoslynAnalyzers": true,
+    "omnisharp.organizeImportsOnFormat": true,
+    "omnisharp.enableAsyncCompletion": true,
+    "omnisharp.maxProjectResults": 250,
+    "omnisharp.maxProjectFileCount": 2000,
+    // Code Style and Formatting
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit",
+        "source.removeUnusedImports": "explicit"
+    },
+    // File Associations
+    "files.associations": {
+        "*.cs": "csharp",
+        "*.csx": "csharp"
+    },
+    // IntelliSense
+    "editor.suggestSelection": "first",
+    "editor.suggest.showKeywords": true,
+    "editor.suggest.showSnippets": true,
+    "editor.suggest.showClasses": true,
+    "editor.suggest.showFunctions": true,
+    "editor.suggest.showVariables": true,
+    "editor.suggest.showModules": true,
+    "editor.suggest.showProperties": true,
+    "editor.suggest.showEvents": true,
+    "editor.suggest.showOperators": true,
+    "editor.suggest.showUnits": true,
+    "editor.suggest.showValues": true,
+    "editor.suggest.showConstants": true,
+    "editor.suggest.showEnums": true,
+    "editor.suggest.showEnumMembers": true,
+    "editor.suggest.showStructs": true,
+    "editor.suggest.showInterfaces": true,
+    "editor.suggest.showText": true,
+    "editor.suggest.showColors": true,
+    "editor.suggest.showFiles": true,
+    "editor.suggest.showReferences": true,
+    "editor.suggest.showCustomcolors": true,
+    "editor.suggest.showFolders": true,
+    "editor.suggest.showTypeParameters": true,
+    "editor.suggest.showWords": true,
+    // Error Prevention and Warnings
+    "problems.decorations.enabled": true,
+    "editor.renderWhitespace": "boundary",
+    "editor.renderControlCharacters": true,
+    "editor.rulers": [
+        120
+    ],
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 120,
+    // Testing
+    "dotnet.unitTests.runSettingsPath": "",
+    "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+    // Git
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "git.autofetch": true,
+    // File Explorer
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+    // Terminal
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.shell.windows": "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    // Language Specific
+    "[csharp]": {
+        "editor.defaultFormatter": "ms-dotnettools.csharp",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+        },
+        "editor.semanticHighlighting.enabled": true,
+        "editor.bracketPairColorization.enabled": true,
+        "editor.guides.bracketPairs": true
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features",
+        "editor.formatOnSave": true
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.wordWrap": "on"
+    },
+    // Cursor AI Specific
+    "cursor.ai.enableCodeGeneration": true,
+    "cursor.ai.enableRefactoring": true,
+    "cursor.ai.enableDocumentation": true,
+    "cursor.ai.enableTesting": true,
+    "cursor.ai.enablePerformanceOptimization": true,
+    "cursor.ai.enableSecurityScanning": true,
+    // Multi-tenant Development
+    "cursor.ai.tenantAware": true,
+    "cursor.ai.includeTenantContext": true,
+    // Domain-Specific
+    "cursor.ai.lawnCareDomain": true,
+    "cursor.ai.seasonalServices": true,
+    "cursor.ai.equipmentManagement": true,
+    "cursor.ai.routeOptimization": true
+}
