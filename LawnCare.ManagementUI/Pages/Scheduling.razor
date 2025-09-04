@@ -4,6 +4,7 @@
 @using LawnCare.ManagementUI.Services
 @inject ISchedulingService SchedulingService
 @inject ILogger<Scheduling> Logger
+@inject NavigationManager NavigationManager
 
 <PageTitle>Scheduling - Lawn Care Management</PageTitle>
 
@@ -187,8 +188,7 @@
 
     private void ShowJobDetails(Guid jobId)
     {
-        selectedJobId = jobId;
-        showJobModal = true;
+        NavigationManager.NavigateTo($"/jobs/edit/{jobId}");
     }
 
     private void CloseJobModal()

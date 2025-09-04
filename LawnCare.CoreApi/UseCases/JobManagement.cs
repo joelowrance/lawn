@@ -69,6 +69,13 @@ public record SearchJobsQuery : IRequest<List<ServiceRequestDto>>
 // Shared Mapping Service
 public class JobMappingService
 {
+    private readonly CoreDbContext _dbContext;
+
+    public JobMappingService(CoreDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
     public ServiceRequestDto MapToServiceRequestDto(Job job, Location? location = null)
     {
         return new ServiceRequestDto
@@ -119,6 +126,15 @@ public class JobMappingService
     {
         // TODO: Get from Location.Owner when email field is available
         return "N/A";
+    }
+
+    public async Task<ServiceRequestDto> MapToServiceRequestDtoAsync(Job job)
+    {
+        var location = await _dbContext.Locations
+            .Include(l => l.Owner)
+            .FirstOrDefaultAsync(l => l.LocationId == job.LocationId);
+        
+        return MapToServiceRequestDto(job, location);
     }
 }
 

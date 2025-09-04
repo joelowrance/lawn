@@ -14,4 +14,5 @@ public interface ICoreApiService
         DateTime? date = null,
         bool? upcoming = null);
     Task<ServiceRequest> CreateJobEstimateAsync(JobEstimate jobEstimate);
+    Task<ServiceRequest> UpdateJobAsync(Guid jobId, UpdateJobRequest updateRequest);
 }
