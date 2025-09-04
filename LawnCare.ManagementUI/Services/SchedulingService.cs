@@ -14,6 +14,7 @@ public interface ISchedulingService
         DateTime? date = null,
         bool? upcoming = null);
     Task<ServiceRequest> CreateJobEstimateAsync(JobEstimate jobEstimate);
+    Task<ServiceRequest> UpdateJobAsync(Guid jobId, UpdateJobRequest updateRequest);
 }
 
 public class SchedulingService : ISchedulingService
@@ -106,6 +107,19 @@ public class SchedulingService : ISchedulingService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating job estimate in CoreAPI");
+            throw;
+        }
+    }
+
+    public async Task<ServiceRequest> UpdateJobAsync(Guid jobId, UpdateJobRequest updateRequest)
+    {
+        try
+        {
+            return await _coreApiService.UpdateJobAsync(jobId, updateRequest);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating job {JobId} in CoreAPI", jobId);
             throw;
         }
     }

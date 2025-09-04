@@ -60,11 +60,47 @@ namespace LawnCare.CoreApi.Domain.Entities
 			_services.Add(service);
 		}
 
-		public void AddNote(string content)
-		{
-			var note = new JobNote(JobId, content.Trim());
-			_notes.Add(note);
-		}
+			public void AddNote(string content)
+	{
+		var note = new JobNote(JobId, content.Trim());
+		_notes.Add(note);
+	}
+
+	public void UpdateStatus(JobStatus newStatus)
+	{
+		Status = newStatus;
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public void UpdatePriority(JobPriority newPriority)
+	{
+		Priority = newPriority;
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public void UpdateRequestedServiceDate(DateTimeOffset? newDate)
+	{
+		RequestedServiceDate = newDate;
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public void UpdateJobCost(Money newCost)
+	{
+		JobCost = newCost;
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public void ClearServices()
+	{
+		_services.Clear();
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
+
+	public void ClearNotes()
+	{
+		_notes.Clear();
+		UpdatedAt = DateTimeOffset.UtcNow;
+	}
 	}
 	
 	public record JobCreatedDomainEvent(JobId JobId) : IDomainEvent;

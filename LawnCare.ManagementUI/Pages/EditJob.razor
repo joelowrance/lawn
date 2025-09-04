@@ -1,0 +1,363 @@
+@page "/jobs/edit/{JobId:guid}"
+@using LawnCare.ManagementUI.Models
+@using LawnCare.ManagementUI.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@inject ISchedulingService SchedulingService
+@inject NavigationManager NavigationManager
+@inject ILogger<EditJob> Logger
+
+<PageTitle>Edit Job - @(job?.CustomerName ?? "Loading...")</PageTitle>
+
+<div class="edit-job-container">
+    @if (isLoading)
+    {
+        <div class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading job details...</p>
+        </div>
+    }
+    else if (job == null)
+    {
+        <div class="error-state">
+            <div class="error-icon">❌</div>
+            <h3>Job Not Found</h3>
+            <p>The requested job could not be found.</p>
+            <button class="btn btn-primary" @onclick="GoBack">Go Back</button>
+        </div>
+    }
+    else
+    {
+        <div class="edit-job-header">
+            <div class="header-content">
+                <div class="job-title">
+                    <span class="service-icon">@GetServiceIcon(job.ServiceType)</span>
+                    <h1>Edit Job - @job.CustomerName</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" @onclick="GoBack">Cancel</button>
+                    <button class="btn btn-primary" @onclick="SaveJob" disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <span class="spinner"></span>
+                        }
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="edit-job-content">
+            <EditForm Model="@updateRequest" OnValidSubmit="@HandleSubmit" OnInvalidSubmit="@HandleInvalidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="validation-summary" />
+
+                <div class="form-sections">
+                    <!-- Job Status and Priority -->
+                    <div class="form-section">
+                        <h3>Job Details</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <InputSelect id="status" @bind-Value="updateRequest.Status" class="form-control">
+                                    <option value="">Select Status</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="InProgress">In Progress</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </InputSelect>
+                            </div>
+                            <div class="form-group">
+                                <label for="priority">Priority</label>
+                                <InputSelect id="priority" @bind-Value="updateRequest.Priority" class="form-control">
+                                    <option value="">Select Priority</option>
+                                    <option value="Normal">Normal</option>
+                                    <option value="Expedited">Expedited</option>
+                                    <option value="Emergency">Emergency</option>
+                                </InputSelect>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scheduling -->
+                    <div class="form-section">
+                        <h3>Scheduling</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="scheduledDate">Scheduled Date</label>
+                                <InputDate id="scheduledDate" @bind-Value="scheduledDate" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label for="estimatedCost">Estimated Cost</label>
+                                <InputNumber id="estimatedCost" @bind-Value="updateRequest.JobCost" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Items -->
+                    <div class="form-section">
+                        <h3>Service Items</h3>
+                        <div class="service-items">
+                            @if (updateRequest.ServiceItems != null)
+                            {
+                                @for (int i = 0; i < updateRequest.ServiceItems.Count; i++)
+                                {
+                                    var index = i;
+                                    <div class="service-item">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>Service Name</label>
+                                                <InputText @bind-Value="updateRequest.ServiceItems[index].ServiceName" class="form-control" />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Quantity</label>
+                                                <InputNumber @bind-Value="updateRequest.ServiceItems[index].Quantity" class="form-control" />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Price</label>
+                                                <InputNumber @bind-Value="updateRequest.ServiceItems[index].Price" class="form-control" />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>&nbsp;</label>
+                                                <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemoveServiceItem(index)">
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Comment</label>
+                                            <InputTextArea @bind-Value="updateRequest.ServiceItems[index].Comment" class="form-control" rows="2" />
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            <button type="button" class="btn btn-secondary" @onclick="AddServiceItem">
+                                Add Service Item
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-section">
+                        <h3>Notes</h3>
+                        <div class="notes-section">
+                            @if (updateRequest.Notes != null)
+                            {
+                                @for (int i = 0; i < updateRequest.Notes.Count; i++)
+                                {
+                                    var index = i;
+                                    <div class="note-item">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <InputTextArea @bind-Value="updateRequest.Notes[index]" class="form-control" rows="3" placeholder="Enter note..." />
+                                            </div>
+                                            <div class="form-group">
+                                                <label>&nbsp;</label>
+                                                <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemoveNote(index)">
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            <button type="button" class="btn btn-secondary" @onclick="AddNote">
+                                Add Note
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Customer Information (Read-only) -->
+                    <div class="form-section">
+                        <h3>Customer Information</h3>
+                        <div class="readonly-info">
+                            <div class="info-item">
+                                <label>Customer Name:</label>
+                                <span>@job.CustomerName</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Property Address:</label>
+                                <span>@job.PropertyAddress</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Contact Phone:</label>
+                                <span>@job.ContactPhone</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Contact Email:</label>
+                                <span>@job.ContactEmail</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid JobId { get; set; }
+
+    private ServiceRequest? job;
+    private UpdateJobRequest updateRequest = new();
+    private DateTime? scheduledDate;
+    private bool isLoading = true;
+    private bool isSaving = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (JobId != Guid.Empty)
+        {
+            await LoadJobDetails();
+        }
+        else
+        {
+            Logger.LogWarning("Bad job id (empty GUID) in EditJob");
+            GoBack();
+        }
+    }
+
+    private async Task LoadJobDetails()
+    {
+        isLoading = true;
+        Logger.LogInformation("Loading job details for JobId: {JobId}", JobId);
+        try
+        {
+            job = await SchedulingService.GetJobByIdAsync(JobId);
+            if (job != null)
+            {
+                Logger.LogInformation("Job loaded: {JobId}, Customer: {CustomerName}", job.Id, job.CustomerName);
+                InitializeUpdateRequest();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading job details for JobId: {JobId}", JobId);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void InitializeUpdateRequest()
+    {
+        if (job == null) return;
+
+        updateRequest = new UpdateJobRequest
+        {
+            Status = job.Status,
+            Priority = job.Priority,
+            RequestedServiceDate = job.ScheduledDate,
+            JobCost = job.EstimatedCost,
+            ServiceItems = new List<ServiceItemRequest>
+            {
+                new ServiceItemRequest
+                {
+                    ServiceName = job.ServiceType,
+                    Quantity = 1,
+                    Comment = job.SpecialInstructions,
+                    Price = job.EstimatedCost
+                }
+            },
+            Notes = string.IsNullOrEmpty(job.Notes) 
+                ? new List<string>() 
+                : job.Notes.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(n => n.Trim()).ToList()
+        };
+
+        scheduledDate = job.ScheduledDate;
+    }
+
+    private async Task HandleSubmit()
+    {
+        await SaveJob();
+    }
+
+    private void HandleInvalidSubmit()
+    {
+        Logger.LogWarning("Form validation failed");
+    }
+
+    private async Task SaveJob()
+    {
+        if (job == null) return;
+
+        isSaving = true;
+        try
+        {
+            // Update the scheduled date from the date picker
+            if (scheduledDate.HasValue)
+            {
+                updateRequest.RequestedServiceDate = scheduledDate.Value;
+            }
+
+            var updatedJob = await SchedulingService.UpdateJobAsync(JobId, updateRequest);
+            Logger.LogInformation("Job {JobId} updated successfully", JobId);
+            
+            // Navigate back to scheduling page
+            NavigationManager.NavigateTo("/scheduling");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error updating job {JobId}", JobId);
+            // TODO: Show error message to user
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private void AddServiceItem()
+    {
+        updateRequest.ServiceItems ??= new List<ServiceItemRequest>();
+        updateRequest.ServiceItems.Add(new ServiceItemRequest
+        {
+            ServiceName = "",
+            Quantity = 1,
+            Comment = "",
+            Price = 0
+        });
+    }
+
+    private void RemoveServiceItem(int index)
+    {
+        if (updateRequest.ServiceItems != null && index >= 0 && index < updateRequest.ServiceItems.Count)
+        {
+            updateRequest.ServiceItems.RemoveAt(index);
+        }
+    }
+
+    private void AddNote()
+    {
+        updateRequest.Notes ??= new List<string>();
+        updateRequest.Notes.Add("");
+    }
+
+    private void RemoveNote(int index)
+    {
+        if (updateRequest.Notes != null && index >= 0 && index < updateRequest.Notes.Count)
+        {
+            updateRequest.Notes.RemoveAt(index);
+        }
+    }
+
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/scheduling");
+    }
+
+    private string GetServiceIcon(string serviceType)
+    {
+        return serviceType.ToLower() switch
+        {
+            "lawn care" or "mowing" => "🌱",
+            "tree service" or "tree removal" => "🌳",
+            "landscaping" => "🌿",
+            "snow removal" => "❄️",
+            "fertilization" => "🌾",
+            _ => "🔧"
+        };
+    }
+}
