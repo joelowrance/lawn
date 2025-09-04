@@ -37,7 +37,7 @@ public class SchedulingServiceTests
             {
                 new() { ServiceName = "Test Service", Quantity = 1, Comment = "Test comment", Price = 100m }
             },
-            Notes = new List<string> { "Test note" }
+            Reason = "Test update"
         };
 
         var expectedResult = CreateServiceRequest();
@@ -120,7 +120,7 @@ public class SchedulingServiceTests
         {
             Status = "Completed",
             Priority = "Normal",
-            RequestedServiceDate = DateTimeOffset.UtcNow.AddDays(3),
+            RequestedServiceDate = DateTime.UtcNow.AddDays(3),
             JobCost = 500.00m,
             ServiceItems = new List<ServiceItemRequest>
             {
@@ -128,12 +128,7 @@ public class SchedulingServiceTests
                 new() { ServiceName = "Fertilization", Quantity = 1, Comment = "Spring treatment", Price = 125m },
                 new() { ServiceName = "Weed Control", Quantity = 1, Comment = "Spot treatment", Price = 50m }
             },
-            Notes = new List<string> 
-            { 
-                "Customer requested early morning service",
-                "Gate code is 1234",
-                "Please call before arrival"
-            }
+            Reason = "Customer requested early morning service with gate code 1234"
         };
 
         var expectedResult = CreateServiceRequest();
@@ -153,8 +148,7 @@ public class SchedulingServiceTests
     {
         // Arrange
         var jobId = Guid.NewGuid();
-        var updateRequest = new UpdateJobRequest { Status = "InProgress" };
-        var cancellationToken = new CancellationToken();
+        var updateRequest = new UpdateJobRequest { Status = "InProgress", Reason = "Test update" };
 
         var expectedResult = CreateServiceRequest();
         _coreApiServiceMock.Setup(x => x.UpdateJobAsync(jobId, updateRequest))

@@ -138,33 +138,12 @@
                         </div>
                     </div>
 
-                    <!-- Notes -->
+                    <!-- Reason for Changes -->
                     <div class="form-section">
-                        <h3>Notes</h3>
-                        <div class="notes-section">
-                            @if (updateRequest.Notes != null)
-                            {
-                                @for (int i = 0; i < updateRequest.Notes.Count; i++)
-                                {
-                                    var index = i;
-                                    <div class="note-item">
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <InputTextArea @bind-Value="updateRequest.Notes[index]" class="form-control" rows="3" placeholder="Enter note..." />
-                                            </div>
-                                            <div class="form-group">
-                                                <label>&nbsp;</label>
-                                                <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemoveNote(index)">
-                                                    Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                            <button type="button" class="btn btn-secondary" @onclick="AddNote">
-                                Add Note
-                            </button>
+                        <h3>Reason for Changes</h3>
+                        <div class="form-group">
+                            <label for="reason">Reason *</label>
+                            <InputTextArea id="reason" @bind-Value="updateRequest.Reason" class="form-control" rows="3" placeholder="Please provide a reason for these changes..." />
                         </div>
                     </div>
 
@@ -261,9 +240,7 @@
                     Price = job.EstimatedCost
                 }
             },
-            Notes = string.IsNullOrEmpty(job.Notes) 
-                ? new List<string>() 
-                : job.Notes.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(n => n.Trim()).ToList()
+            Reason = string.Empty
         };
 
         scheduledDate = job.ScheduledDate;
@@ -329,19 +306,6 @@
         }
     }
 
-    private void AddNote()
-    {
-        updateRequest.Notes ??= new List<string>();
-        updateRequest.Notes.Add("");
-    }
-
-    private void RemoveNote(int index)
-    {
-        if (updateRequest.Notes != null && index >= 0 && index < updateRequest.Notes.Count)
-        {
-            updateRequest.Notes.RemoveAt(index);
-        }
-    }
 
     private void GoBack()
     {

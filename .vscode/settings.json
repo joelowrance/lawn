@@ -20,9 +20,7 @@
     "editor.hover.enabled": true,
     // C# Specific Settings
     "omnisharp.enableEditorConfigSupport": true,
-    "omnisharp.enableImportCompletion": true,
     "omnisharp.enableRoslynAnalyzers": true,
-    "omnisharp.organizeImportsOnFormat": true,
     "omnisharp.enableAsyncCompletion": true,
     "omnisharp.maxProjectResults": 250,
     "omnisharp.maxProjectFileCount": 2000,
@@ -123,5 +121,6 @@
     "cursor.ai.lawnCareDomain": true,
     "cursor.ai.seasonalServices": true,
     "cursor.ai.equipmentManagement": true,
-    "cursor.ai.routeOptimization": true
+    "cursor.ai.routeOptimization": true,
+    "dotnet.formatting.organizeImportsOnFormat": true
 }

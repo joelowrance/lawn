@@ -189,7 +189,7 @@ public class CoreApiServiceTests
             {
                 new() { ServiceName = "Test Service", Quantity = 1, Comment = "Test comment", Price = 100m }
             },
-            Notes = new List<string> { "Test note" }
+            Reason = "Test update"
         };
 
         var expectedResponse = CreateServiceRequest();
@@ -236,8 +236,7 @@ public class CoreApiServiceTests
         deserializedRequest.JobCost.Should().Be(updateRequest.JobCost);
         deserializedRequest.ServiceItems.Should().HaveCount(1);
         deserializedRequest.ServiceItems!.First().ServiceName.Should().Be("Test Service");
-        deserializedRequest.Notes.Should().HaveCount(1);
-        deserializedRequest.Notes!.First().Should().Be("Test note");
+        deserializedRequest.Reason.Should().Be("Test update");
     }
 
     [Fact]
@@ -286,7 +285,7 @@ public class CoreApiServiceTests
         deserializedRequest.Priority.Should().BeNull();
         deserializedRequest.JobCost.Should().BeNull();
         deserializedRequest.ServiceItems.Should().BeNull();
-        deserializedRequest.Notes.Should().BeNull();
+        deserializedRequest.Reason.Should().BeEmpty();
     }
 
     private ServiceRequest CreateServiceRequest()

@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppHost", "AppHost\AppHost.csproj", "{E16AFDC9-2D70-4A69-A9ED-C07F5FFF50E8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppHost", "src\AppHost\AppHost.csproj", "{E16AFDC9-2D70-4A69-A9ED-C07F5FFF50E8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BB78246C-C4B7-4219-9495-3B4D0FBD038A}"
 	ProjectSection(SolutionItems) = preproject
@@ -15,23 +15,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Agents.md = Agents.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.Shared", "LawnCare.Shared\LawnCare.Shared.csproj", "{543464F9-04E7-433C-A933-85A4C81B1DFD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.Shared", "src\LawnCare.Shared\LawnCare.Shared.csproj", "{543464F9-04E7-433C-A933-85A4C81B1DFD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.JobApi", "LawnCare.JobApi\LawnCare.JobApi.csproj", "{CEEDB008-F1E1-45FB-B757-E547203953E8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.JobApi", "src\LawnCare.JobApi\LawnCare.JobApi.csproj", "{CEEDB008-F1E1-45FB-B757-E547203953E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.CustomerApi", "LawnCare.CustomerApi\LawnCare.CustomerApi.csproj", "{F66B7592-579E-4575-B952-8D0610DC7ADD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.CustomerApi", "src\LawnCare.CustomerApi\LawnCare.CustomerApi.csproj", "{F66B7592-579E-4575-B952-8D0610DC7ADD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.StateMachine", "LawnCare.StateMachine\LawnCare.StateMachine.csproj", "{3B4AE65E-FD21-4454-AC94-8A6A83483B66}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.StateMachine", "src\LawnCare.StateMachine\LawnCare.StateMachine.csproj", "{3B4AE65E-FD21-4454-AC94-8A6A83483B66}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.Communications", "LawnCare.Communications\LawnCare.Communications.csproj", "{97A2B537-F2B8-407F-8142-9DC83B19C308}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.Communications", "src\LawnCare.Communications\LawnCare.Communications.csproj", "{97A2B537-F2B8-407F-8142-9DC83B19C308}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.CoreApi", "LawnCare.CoreApi\LawnCare.CoreApi.csproj", "{A44CC935-8DD4-4853-96C1-5C0C18F4AF47}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.CoreApi", "src\LawnCare.CoreApi\LawnCare.CoreApi.csproj", "{A44CC935-8DD4-4853-96C1-5C0C18F4AF47}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.ManagementUI", "LawnCare.ManagementUI\LawnCare.ManagementUI.csproj", "{3EAB214B-D6FC-4B48-A3A6-327E5BA9D8EB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.ManagementUI", "src\LawnCare.ManagementUI\LawnCare.ManagementUI.csproj", "{3EAB214B-D6FC-4B48-A3A6-327E5BA9D8EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.CoreApi.Tests", "tests\LawnCare.CoreApi.Tests\LawnCare.CoreApi.Tests.csproj", "{8F2A1B3C-4D5E-6F7G-8H9I-0J1K2L3M4N5O}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.CoreApi.Tests", "tests\LawnCare.CoreApi.Tests\LawnCare.CoreApi.Tests.csproj", "{EC7AD676-35D3-4CD9-B9BB-E8C89901DE59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.ManagementUI.Tests", "tests\LawnCare.ManagementUI.Tests\LawnCare.ManagementUI.Tests.csproj", "{9G3B2C4D-5E6F-7G8H-9I0J-1K2L3M4N5O6P}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LawnCare.ManagementUI.Tests", "tests\LawnCare.ManagementUI.Tests\LawnCare.ManagementUI.Tests.csproj", "{3C94AF8F-4E6E-43E6-BA09-416C9B1549FF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{60DF466A-928D-41E3-8059-46F727B04556}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,13 +73,17 @@ Global
 		{3EAB214B-D6FC-4B48-A3A6-327E5BA9D8EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3EAB214B-D6FC-4B48-A3A6-327E5BA9D8EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3EAB214B-D6FC-4B48-A3A6-327E5BA9D8EB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8F2A1B3C-4D5E-6F7G-8H9I-0J1K2L3M4N5O}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8F2A1B3C-4D5E-6F7G-8H9I-0J1K2L3M4N5O}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8F2A1B3C-4D5E-6F7G-8H9I-0J1K2L3M4N5O}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8F2A1B3C-4D5E-6F7G-8H9I-0J1K2L3M4N5O}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9G3B2C4D-5E6F-7G8H-9I0J-1K2L3M4N5O6P}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9G3B2C4D-5E6F-7G8H-9I0J-1K2L3M4N5O6P}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9G3B2C4D-5E6F-7G8H-9I0J-1K2L3M4N5O6P}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9G3B2C4D-5E6F-7G8H-9I0J-1K2L3M4N5O6P}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC7AD676-35D3-4CD9-B9BB-E8C89901DE59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC7AD676-35D3-4CD9-B9BB-E8C89901DE59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC7AD676-35D3-4CD9-B9BB-E8C89901DE59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC7AD676-35D3-4CD9-B9BB-E8C89901DE59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C94AF8F-4E6E-43E6-BA09-416C9B1549FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C94AF8F-4E6E-43E6-BA09-416C9B1549FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C94AF8F-4E6E-43E6-BA09-416C9B1549FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C94AF8F-4E6E-43E6-BA09-416C9B1549FF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EC7AD676-35D3-4CD9-B9BB-E8C89901DE59} = {60DF466A-928D-41E3-8059-46F727B04556}
+		{3C94AF8F-4E6E-43E6-BA09-416C9B1549FF} = {60DF466A-928D-41E3-8059-46F727B04556}
 	EndGlobalSection
 EndGlobal

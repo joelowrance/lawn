@@ -9,7 +9,10 @@ public class UpdateJobRequest
     public DateTime? RequestedServiceDate { get; set; }
     public decimal? JobCost { get; set; }
     public List<ServiceItemRequest>? ServiceItems { get; set; }
-    public List<string>? Notes { get; set; }
+    
+    [Required(ErrorMessage = "Reason is required for job updates")]
+    [StringLength(500, ErrorMessage = "Reason cannot exceed 500 characters")]
+    public string Reason { get; set; } = string.Empty;
 }
 
 public class ServiceItemRequest

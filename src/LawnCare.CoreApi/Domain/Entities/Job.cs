@@ -66,40 +66,54 @@ namespace LawnCare.CoreApi.Domain.Entities
 		_notes.Add(note);
 	}
 
-	public void UpdateStatus(JobStatus newStatus)
+	public void UpdateJobDetails(JobStatus? newStatus, JobPriority? newPriority, DateTimeOffset? newRequestedServiceDate, Money? newJobCost, List<JobLineItem>? newServiceItems, string reason)
 	{
-		Status = newStatus;
-		UpdatedAt = DateTimeOffset.UtcNow;
-	}
+		if (string.IsNullOrWhiteSpace(reason))
+		{
+			throw new ArgumentException("Reason is required for job updates", nameof(reason));
+		}
 
-	public void UpdatePriority(JobPriority newPriority)
-	{
-		Priority = newPriority;
-		UpdatedAt = DateTimeOffset.UtcNow;
-	}
+		bool hasChanges = false;
 
-	public void UpdateRequestedServiceDate(DateTimeOffset? newDate)
-	{
-		RequestedServiceDate = newDate;
-		UpdatedAt = DateTimeOffset.UtcNow;
-	}
+		if (newStatus.HasValue && newStatus.Value != Status)
+		{
+			Status = newStatus.Value;
+			hasChanges = true;
+		}
 
-	public void UpdateJobCost(Money newCost)
-	{
-		JobCost = newCost;
-		UpdatedAt = DateTimeOffset.UtcNow;
-	}
+		if (newPriority.HasValue && newPriority.Value != Priority)
+		{
+			Priority = newPriority.Value;
+			hasChanges = true;
+		}
 
-	public void ClearServices()
-	{
-		_services.Clear();
-		UpdatedAt = DateTimeOffset.UtcNow;
-	}
+		if (newRequestedServiceDate != RequestedServiceDate)
+		{
+			RequestedServiceDate = newRequestedServiceDate;
+			hasChanges = true;
+		}
 
-	public void ClearNotes()
-	{
-		_notes.Clear();
-		UpdatedAt = DateTimeOffset.UtcNow;
+		if (newJobCost != null && newJobCost != JobCost)
+		{
+			JobCost = newJobCost;
+			hasChanges = true;
+		}
+
+		if (newServiceItems != null)
+		{
+			_services.Clear();
+			foreach (var serviceItem in newServiceItems)
+			{
+				_services.Add(serviceItem);
+			}
+			hasChanges = true;
+		}
+
+		if (hasChanges)
+		{
+			UpdatedAt = DateTimeOffset.UtcNow;
+			AddNote($"Job updated: {reason.Trim()}");
+		}
 	}
 	}
 	

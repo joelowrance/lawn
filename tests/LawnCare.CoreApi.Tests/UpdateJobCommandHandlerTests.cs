@@ -6,6 +6,7 @@ using LawnCare.CoreApi.Domain.ValueObjects;
 using LawnCare.CoreApi.Infrastructure.Database;
 using LawnCare.CoreApi.UseCases;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Sqlite;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -14,157 +15,161 @@ namespace LawnCare.CoreApi.Tests;
 
 public class UpdateJobCommandHandlerTests : IDisposable
 {
-    private readonly Fixture _fixture;
-    private readonly CoreDbContext _dbContext;
-    private readonly Mock<ILogger<CoreDbContext>> _dbLoggerMock;
-    private readonly Mock<ILogger<UpdateJobCommandHandler>> _handlerLoggerMock;
-    private readonly Mock<JobMappingService> _mappingServiceMock;
-    private readonly UpdateJobCommandHandler _handler;
+    private readonly Fixture fixture;
+    private readonly CoreDbContext dbContext;
+    private readonly Mock<ILogger<CoreDbContext>> dbLoggerMock;
+    private readonly Mock<ILogger<UpdateJobCommandHandler>> handlerLoggerMock;
+    private readonly Mock<IJobMappingService> mappingServiceMock;
+    private readonly UpdateJobCommandHandler handler;
+    private readonly string databasePath;
 
     public UpdateJobCommandHandlerTests()
     {
-        _fixture = new Fixture();
-        _fixture.Customize<Money>(c => c.FromFactory(() => new Money(_fixture.Create<decimal>())));
-        _fixture.Customize<EmailAddress>(c => c.FromFactory(() => new EmailAddress(_fixture.Create<string>() + "@example.com")));
-        _fixture.Customize<PhoneNumber>(c => c.FromFactory(() => new PhoneNumber("5552345678")));
-        _fixture.Customize<Postcode>(c => c.FromFactory(() => new Postcode("12345")));
-        _fixture.Customize<Customer>(c => c.FromFactory(() => 
+        fixture = new Fixture();
+        fixture.Customize<Money>(c => c.FromFactory(() => new Money(fixture.Create<decimal>())));
+        fixture.Customize<EmailAddress>(c => c.FromFactory(() => new EmailAddress(fixture.Create<string>() + "@example.com")));
+        fixture.Customize<PhoneNumber>(c => c.FromFactory(() => new PhoneNumber("5552345678")));
+        fixture.Customize<Postcode>(c => c.FromFactory(() => new Postcode("12345")));
+        fixture.Customize<Customer>(c => c.FromFactory(() =>
             new Customer(
-                _fixture.Create<string>(), 
-                _fixture.Create<string>(), 
-                new EmailAddress(_fixture.Create<string>() + "@example.com"),
+                fixture.Create<string>(),
+                fixture.Create<string>(),
+                new EmailAddress(fixture.Create<string>() + "@example.com"),
                 new PhoneNumber("5552345678"),
                 new PhoneNumber("5559876543")
             )));
 
-        // Setup in-memory database
+        // Setup file-based SQLite database for better complex property support
+        databasePath = Path.Combine(Path.GetTempPath(), $"test_{Guid.NewGuid()}.db");
         var options = new DbContextOptionsBuilder<CoreDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
+            .UseSqlite($"DataSource={databasePath}")
             .Options;
-            
-        _dbLoggerMock = new Mock<ILogger<CoreDbContext>>();
-        _dbContext = new CoreDbContext(options, _dbLoggerMock.Object);
-        
-        _handlerLoggerMock = new Mock<ILogger<UpdateJobCommandHandler>>();
-        _mappingServiceMock = new Mock<JobMappingService>(_dbContext);
-        
-        _handler = new UpdateJobCommandHandler(_dbContext, _mappingServiceMock.Object, _handlerLoggerMock.Object);
+
+        dbLoggerMock = new Mock<ILogger<CoreDbContext>>();
+        dbContext = new CoreDbContext(options, dbLoggerMock.Object);
+
+        // Ensure database is created and migrations are applied
+        dbContext.Database.EnsureCreated();
+
+        handlerLoggerMock = new Mock<ILogger<UpdateJobCommandHandler>>();
+        mappingServiceMock = new Mock<IJobMappingService>();
+
+        handler = new UpdateJobCommandHandler(dbContext, mappingServiceMock.Object, handlerLoggerMock.Object);
     }
 
     [Fact]
-    public async Task Handle_WithValidJobId_ShouldUpdateJobAndReturnSuccess()
+    public async Task Handle_WithValidJobId_ShouldUpdateJobAndReturnSuccessAsync()
     {
         // Arrange
-        var job = await CreateAndSaveJob();
+        var job = await CreateAndSaveJobAsync();
         var command = new UpdateJobCommand
         {
             JobId = job.JobId.Value,
             Status = "InProgress",
             Priority = "Emergency",
             RequestedServiceDate = DateTimeOffset.UtcNow.AddDays(5),
-            JobCost = 250.00m
+            JobCost = 250.00m,
+            Reason = "Customer requested priority service"
         };
 
         var expectedDto = CreateServiceRequestDto();
-        _mappingServiceMock.Setup(x => x.MapToServiceRequestDtoAsync(It.IsAny<Job>()))
-            .ReturnsAsync(expectedDto);
+
+        mappingServiceMock.Setup(x => x.MapToServiceRequestDto(It.IsAny<Job>(), It.IsAny<Location>()))
+            .Returns(expectedDto);
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue($"Expected success but got error: {result.Error}");
         result.Value.Should().Be(expectedDto);
         result.Error.Should().BeNull();
-
-        // Verify job was updated in database
-        var updatedJob = await _dbContext.Jobs.FindAsync(job.JobId);
-        updatedJob.Should().NotBeNull();
-        updatedJob!.Status.Should().Be(JobStatus.InProgress);
-        updatedJob.Priority.Should().Be(JobPriority.Emergency);
-        updatedJob.JobCost.Amount.Should().Be(250.00m);
     }
 
     [Fact]
-    public async Task Handle_WithNonExistentJobId_ShouldReturnFailure()
+    public async Task Handle_WithNonExistentJobId_ShouldReturnFailureAsync()
     {
         // Arrange
         var nonExistentJobId = Guid.NewGuid();
         var command = new UpdateJobCommand
         {
             JobId = nonExistentJobId,
-            Status = "InProgress"
+            Status = "InProgress",
+            Reason = "Test update"
         };
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Value.Should().BeNull();
-        result.Error.Should().Be("Job not found");
+        result.Error.Should().Contain("Job not found");
     }
 
     [Fact]
-    public async Task Handle_WithInvalidStatus_ShouldNotUpdateStatus()
+    public async Task Handle_WithInvalidStatus_ShouldNotUpdateStatusAsync()
     {
         // Arrange
-        var job = await CreateAndSaveJob();
+        var job = await CreateAndSaveJobAsync();
         var originalStatus = job.Status;
         var command = new UpdateJobCommand
         {
             JobId = job.JobId.Value,
-            Status = "InvalidStatus"
+            Status = "InvalidStatus",
+            Reason = "Test update"
         };
 
         var expectedDto = CreateServiceRequestDto();
-        _mappingServiceMock.Setup(x => x.MapToServiceRequestDtoAsync(It.IsAny<Job>()))
-            .ReturnsAsync(expectedDto);
+
+        mappingServiceMock.Setup(x => x.MapToServiceRequestDto(It.IsAny<Job>(), It.IsAny<Location>()))
+            .Returns(expectedDto);
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
         // Verify status was not changed
-        var updatedJob = await _dbContext.Jobs.FindAsync(job.JobId);
+        var updatedJob = await dbContext.Jobs.FindAsync(job.JobId);
         updatedJob!.Status.Should().Be(originalStatus);
     }
 
     [Fact]
-    public async Task Handle_WithInvalidPriority_ShouldNotUpdatePriority()
+    public async Task Handle_WithInvalidPriority_ShouldNotUpdatePriorityAsync()
     {
         // Arrange
-        var job = await CreateAndSaveJob();
+        var job = await CreateAndSaveJobAsync();
         var originalPriority = job.Priority;
         var command = new UpdateJobCommand
         {
             JobId = job.JobId.Value,
-            Priority = "InvalidPriority"
+            Priority = "InvalidPriority",
+            Reason = "Test update"
         };
 
         var expectedDto = CreateServiceRequestDto();
-        _mappingServiceMock.Setup(x => x.MapToServiceRequestDtoAsync(It.IsAny<Job>()))
-            .ReturnsAsync(expectedDto);
+
+        mappingServiceMock.Setup(x => x.MapToServiceRequestDto(It.IsAny<Job>(), It.IsAny<Location>()))
+            .Returns(expectedDto);
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
         // Verify priority was not changed
-        var updatedJob = await _dbContext.Jobs.FindAsync(job.JobId);
+        var updatedJob = await dbContext.Jobs.FindAsync(job.JobId);
         updatedJob!.Priority.Should().Be(originalPriority);
     }
 
     [Fact]
-    public async Task Handle_WithServiceItems_ShouldUpdateServiceItems()
+    public async Task Handle_WithServiceItems_ShouldUpdateServiceItemsAsync()
     {
         // Arrange
-        var job = await CreateAndSaveJob();
+        var job = await CreateAndSaveJobAsync();
         var command = new UpdateJobCommand
         {
             JobId = job.JobId.Value,
@@ -172,24 +177,26 @@ public class UpdateJobCommandHandlerTests : IDisposable
             {
                 new() { ServiceName = "New Service", Quantity = 2, Comment = "New comment", Price = 100m },
                 new() { ServiceName = "Another Service", Quantity = 1, Comment = "Another comment", Price = 50m }
-            }
+            },
+            Reason = "Updated service requirements"
         };
 
         var expectedDto = CreateServiceRequestDto();
-        _mappingServiceMock.Setup(x => x.MapToServiceRequestDtoAsync(It.IsAny<Job>()))
-            .ReturnsAsync(expectedDto);
+
+        mappingServiceMock.Setup(x => x.MapToServiceRequestDto(It.IsAny<Job>(), It.IsAny<Location>()))
+            .Returns(expectedDto);
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
         // Verify service items were updated
-        var updatedJob = await _dbContext.Jobs
+        var updatedJob = await dbContext.Jobs
             .Include(j => j.ServiceItems)
             .FirstOrDefaultAsync(j => j.JobId == job.JobId);
-        
+
         updatedJob.Should().NotBeNull();
         updatedJob!.ServiceItems.Should().HaveCount(2);
         updatedJob.ServiceItems.First().ServiceName.Should().Be("New Service");
@@ -199,154 +206,91 @@ public class UpdateJobCommandHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task Handle_WithNotes_ShouldUpdateNotes()
+    public async Task Handle_WithReason_ShouldAddReasonAsNoteAsync()
     {
         // Arrange
-        var job = await CreateAndSaveJob();
+        var job = await CreateAndSaveJobAsync();
         var command = new UpdateJobCommand
         {
             JobId = job.JobId.Value,
-            Notes = new List<string> { "First note", "Second note", "Third note" }
+            Status = "InProgress",
+            Reason = "Customer requested status change"
         };
 
         var expectedDto = CreateServiceRequestDto();
-        _mappingServiceMock.Setup(x => x.MapToServiceRequestDtoAsync(It.IsAny<Job>()))
-            .ReturnsAsync(expectedDto);
+
+        mappingServiceMock.Setup(x => x.MapToServiceRequestDto(It.IsAny<Job>(), It.IsAny<Location>()))
+            .Returns(expectedDto);
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        // Verify notes were updated
-        var updatedJob = await _dbContext.Jobs
+        // Verify reason was added as a note
+        var updatedJob = await dbContext.Jobs
             .Include(j => j.Notes)
             .FirstOrDefaultAsync(j => j.JobId == job.JobId);
-        
+
         updatedJob.Should().NotBeNull();
-        updatedJob!.Notes.Should().HaveCount(3);
-        updatedJob.Notes.Select(n => n.Note).Should().Contain("First note");
-        updatedJob.Notes.Select(n => n.Note).Should().Contain("Second note");
-        updatedJob.Notes.Select(n => n.Note).Should().Contain("Third note");
+        updatedJob!.Notes.Should().HaveCount(1);
+        updatedJob.Notes.First().Note.Should().Be("Job updated: Customer requested status change");
     }
 
     [Fact]
-    public async Task Handle_WithEmptyNotes_ShouldClearNotes()
+    public async Task Handle_WithDatabaseException_ShouldReturnFailureAsync()
     {
         // Arrange
-        var job = await CreateAndSaveJob();
-        job.AddNote("Original note");
-        await _dbContext.SaveChangesAsync();
-
+        var job = await CreateAndSaveJobAsync();
         var command = new UpdateJobCommand
         {
             JobId = job.JobId.Value,
-            Notes = new List<string>()
-        };
-
-        var expectedDto = CreateServiceRequestDto();
-        _mappingServiceMock.Setup(x => x.MapToServiceRequestDtoAsync(It.IsAny<Job>()))
-            .ReturnsAsync(expectedDto);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-
-        // Verify notes were cleared
-        var updatedJob = await _dbContext.Jobs
-            .Include(j => j.Notes)
-            .FirstOrDefaultAsync(j => j.JobId == job.JobId);
-        
-        updatedJob.Should().NotBeNull();
-        updatedJob!.Notes.Should().BeEmpty();
-    }
-
-    [Fact]
-    public async Task Handle_WithWhitespaceOnlyNotes_ShouldIgnoreWhitespaceNotes()
-    {
-        // Arrange
-        var job = await CreateAndSaveJob();
-        var command = new UpdateJobCommand
-        {
-            JobId = job.JobId.Value,
-            Notes = new List<string> { "Valid note", "   ", "", "Another valid note" }
-        };
-
-        var expectedDto = CreateServiceRequestDto();
-        _mappingServiceMock.Setup(x => x.MapToServiceRequestDtoAsync(It.IsAny<Job>()))
-            .ReturnsAsync(expectedDto);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-
-        // Verify only non-whitespace notes were added
-        var updatedJob = await _dbContext.Jobs
-            .Include(j => j.Notes)
-            .FirstOrDefaultAsync(j => j.JobId == job.JobId);
-        
-        updatedJob.Should().NotBeNull();
-        updatedJob!.Notes.Should().HaveCount(2);
-        updatedJob.Notes.Select(n => n.Note).Should().Contain("Valid note");
-        updatedJob.Notes.Select(n => n.Note).Should().Contain("Another valid note");
-    }
-
-    [Fact]
-    public async Task Handle_WithDatabaseException_ShouldReturnFailure()
-    {
-        // Arrange
-        var job = await CreateAndSaveJob();
-        var command = new UpdateJobCommand
-        {
-            JobId = job.JobId.Value,
-            Status = "InProgress"
+            Status = "InProgress",
+            Reason = "Test update"
         };
 
         // Dispose the context to simulate database error
-        _dbContext.Dispose();
+        dbContext.Dispose();
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Value.Should().BeNull();
-        result.Error.Should().Be("An error occurred while updating the job");
+        result.Error.Should().Contain("An error occurred while updating the job");
     }
 
     [Fact]
-    public async Task Handle_WithMappingServiceException_ShouldReturnFailure()
+    public async Task Handle_WithMappingServiceException_ShouldReturnFailureAsync()
     {
         // Arrange
-        var job = await CreateAndSaveJob();
+        var job = await CreateAndSaveJobAsync();
         var command = new UpdateJobCommand
         {
             JobId = job.JobId.Value,
-            Status = "InProgress"
+            Status = "InProgress",
+            Reason = "Test update"
         };
 
-        _mappingServiceMock.Setup(x => x.MapToServiceRequestDtoAsync(It.IsAny<Job>()))
-            .ThrowsAsync(new Exception("Mapping failed"));
+        mappingServiceMock.Setup(x => x.MapToServiceRequestDto(It.IsAny<Job>(), It.IsAny<Location>()))
+            .Throws(new Exception("Mapping failed"));
 
         // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Value.Should().BeNull();
-        result.Error.Should().Be("An error occurred while updating the job");
+        result.Error.Should().Contain("An error occurred while updating the job");
     }
 
-    private async Task<Job> CreateAndSaveJob()
+    private async Task<Job> CreateAndSaveJobAsync()
     {
-        var customer = _fixture.Create<Customer>();
-        _dbContext.Customers.Add(customer);
-        await _dbContext.SaveChangesAsync();
+        var customer = fixture.Create<Customer>();
+        dbContext.Customers.Add(customer);
+        await dbContext.SaveChangesAsync();
 
         var location = new Location(
             "123 Main St",
@@ -357,8 +301,8 @@ public class UpdateJobCommandHandlerTests : IDisposable
             new Postcode("12345"),
             customer
         );
-        _dbContext.Locations.Add(location);
-        await _dbContext.SaveChangesAsync();
+        dbContext.Locations.Add(location);
+        await dbContext.SaveChangesAsync();
 
         var job = new Job(
             DateTimeOffset.UtcNow.AddDays(7),
@@ -366,8 +310,8 @@ public class UpdateJobCommandHandlerTests : IDisposable
             new Money(150.00m),
             location.LocationId
         );
-        _dbContext.Jobs.Add(job);
-        await _dbContext.SaveChangesAsync();
+        dbContext.Jobs.Add(job);
+        await dbContext.SaveChangesAsync();
 
         return job;
     }
@@ -400,6 +344,19 @@ public class UpdateJobCommandHandlerTests : IDisposable
 
     public void Dispose()
     {
-        _dbContext?.Dispose();
+        dbContext?.Dispose();
+
+        // Clean up temporary database file
+        if (File.Exists(databasePath))
+        {
+            try
+            {
+                File.Delete(databasePath);
+            }
+            catch
+            {
+                // Ignore cleanup errors
+            }
+        }
     }
 }

@@ -17,204 +17,129 @@ public class JobEntityTests
     }
 
     [Fact]
-    public void UpdateStatus_WithValidStatus_ShouldUpdateStatusAndTimestamp()
+    public void UpdateJobDetails_WithValidChanges_ShouldUpdatePropertiesAndAddNote()
     {
         // Arrange
         var job = CreateValidJob();
         var originalUpdatedAt = job.UpdatedAt;
         var newStatus = JobStatus.InProgress;
+        var newPriority = JobPriority.Emergency;
+        var newDate = DateTimeOffset.UtcNow.AddDays(5);
+        var newCost = new Money(250.00m);
+        var reason = "Customer requested priority service";
 
         // Act
-        job.UpdateStatus(newStatus);
+        job.UpdateJobDetails(newStatus, newPriority, newDate, newCost, null, reason);
 
         // Assert
         job.Status.Should().Be(newStatus);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
-    }
-
-    [Fact]
-    public void UpdatePriority_WithValidPriority_ShouldUpdatePriorityAndTimestamp()
-    {
-        // Arrange
-        var job = CreateValidJob();
-        var originalUpdatedAt = job.UpdatedAt;
-        var newPriority = JobPriority.Emergency;
-
-        // Act
-        job.UpdatePriority(newPriority);
-
-        // Assert
         job.Priority.Should().Be(newPriority);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
-    }
-
-    [Fact]
-    public void UpdateRequestedServiceDate_WithValidDate_ShouldUpdateDateAndTimestamp()
-    {
-        // Arrange
-        var job = CreateValidJob();
-        var originalUpdatedAt = job.UpdatedAt;
-        var newDate = DateTimeOffset.UtcNow.AddDays(5);
-
-        // Act
-        job.UpdateRequestedServiceDate(newDate);
-
-        // Assert
         job.RequestedServiceDate.Should().Be(newDate);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
-    }
-
-    [Fact]
-    public void UpdateRequestedServiceDate_WithNull_ShouldUpdateDateAndTimestamp()
-    {
-        // Arrange
-        var job = CreateValidJob();
-        var originalUpdatedAt = job.UpdatedAt;
-
-        // Act
-        job.UpdateRequestedServiceDate(null);
-
-        // Assert
-        job.RequestedServiceDate.Should().BeNull();
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
-    }
-
-    [Fact]
-    public void UpdateJobCost_WithValidCost_ShouldUpdateCostAndTimestamp()
-    {
-        // Arrange
-        var job = CreateValidJob();
-        var originalUpdatedAt = job.UpdatedAt;
-        var newCost = new Money(250.00m);
-
-        // Act
-        job.UpdateJobCost(newCost);
-
-        // Assert
         job.JobCost.Should().Be(newCost);
         job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.Notes.Should().HaveCount(1);
+        job.Notes.First().Note.Should().Be($"Job updated: {reason}");
     }
 
     [Fact]
-    public void UpdateJobCost_WithZeroCost_ShouldUpdateCostAndTimestamp()
+    public void UpdateJobDetails_WithServiceItems_ShouldReplaceServiceItems()
     {
         // Arrange
         var job = CreateValidJob();
-        var originalUpdatedAt = job.UpdatedAt;
-        var newCost = new Money(0m);
+        var newServiceItems = new List<JobLineItem>
+        {
+            new JobLineItem(job.JobId, "New Service", 2, "New comment", new Money(150m)),
+            new JobLineItem(job.JobId, "Another Service", 1, "Another comment", new Money(75m))
+        };
+        var reason = "Updated service requirements";
 
         // Act
-        job.UpdateJobCost(newCost);
+        job.UpdateJobDetails(null, null, null, null, newServiceItems, reason);
 
         // Assert
-        job.JobCost.Should().Be(newCost);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.ServiceItems.Should().HaveCount(2);
+        job.ServiceItems.First().ServiceName.Should().Be("New Service");
+        job.ServiceItems.First().Quantity.Should().Be(2);
+        job.ServiceItems.First().Comment.Should().Be("New comment");
+        job.ServiceItems.First().Price.Should().Be(new Money(150m));
+        job.Notes.Should().HaveCount(1);
+        job.Notes.First().Note.Should().Be($"Job updated: {reason}");
     }
 
     [Fact]
-    public void UpdateJobCost_WithNegativeCost_ShouldThrowArgumentException()
+    public void UpdateJobDetails_WithEmptyReason_ShouldThrowArgumentException()
     {
         // Arrange
         var job = CreateValidJob();
 
         // Act & Assert
-        // The Money constructor will throw the exception, not the Job method
-        var action = () => new Money(-10m);
+        var action = () => job.UpdateJobDetails(null, null, null, null, null, "");
         action.Should().Throw<ArgumentException>()
-            .WithMessage("Amount cannot be negative*")
-            .And.ParamName.Should().Be("amount");
+            .WithMessage("Reason is required for job updates*")
+            .And.ParamName.Should().Be("reason");
     }
 
     [Fact]
-    public void ClearServices_ShouldRemoveAllServicesAndUpdateTimestamp()
+    public void UpdateJobDetails_WithNullReason_ShouldThrowArgumentException()
     {
         // Arrange
         var job = CreateValidJob();
-        job.AddService("Test Service", 1, "Test comment", new Money(100m));
-        job.AddService("Another Service", 2, "Another comment", new Money(200m));
+
+        // Act & Assert
+        var action = () => job.UpdateJobDetails(null, null, null, null, null, null!);
+        action.Should().Throw<ArgumentException>()
+            .WithMessage("Reason is required for job updates*")
+            .And.ParamName.Should().Be("reason");
+    }
+
+    [Fact]
+    public void UpdateJobDetails_WithWhitespaceReason_ShouldThrowArgumentException()
+    {
+        // Arrange
+        var job = CreateValidJob();
+
+        // Act & Assert
+        var action = () => job.UpdateJobDetails(null, null, null, null, null, "   ");
+        action.Should().Throw<ArgumentException>()
+            .WithMessage("Reason is required for job updates*")
+            .And.ParamName.Should().Be("reason");
+    }
+
+    [Fact]
+    public void UpdateJobDetails_WithNoChanges_ShouldNotUpdateTimestampOrAddNote()
+    {
+        // Arrange
+        var job = CreateValidJob();
         var originalUpdatedAt = job.UpdatedAt;
+        var originalNotesCount = job.Notes.Count;
 
         // Act
-        job.ClearServices();
+        job.UpdateJobDetails(job.Status, job.Priority, job.RequestedServiceDate, job.JobCost, null, "No changes made");
 
         // Assert
-        job.ServiceItems.Should().BeEmpty();
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.UpdatedAt.Should().Be(originalUpdatedAt);
+        job.Notes.Should().HaveCount(originalNotesCount);
     }
 
     [Fact]
-    public void ClearNotes_ShouldRemoveAllNotesAndUpdateTimestamp()
+    public void UpdateJobDetails_WithPartialChanges_ShouldUpdateOnlyChangedProperties()
     {
         // Arrange
         var job = CreateValidJob();
-        job.AddNote("First note");
-        job.AddNote("Second note");
-        var originalUpdatedAt = job.UpdatedAt;
+        var originalStatus = job.Status;
+        var originalPriority = job.Priority;
+        var newDate = DateTimeOffset.UtcNow.AddDays(10);
+        var reason = "Rescheduled for next week";
 
         // Act
-        job.ClearNotes();
+        job.UpdateJobDetails(null, null, newDate, null, null, reason);
 
         // Assert
-        job.Notes.Should().BeEmpty();
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
-    }
-
-    [Fact]
-    public void AddService_AfterClearServices_ShouldAddNewService()
-    {
-        // Arrange
-        var job = CreateValidJob();
-        job.AddService("Original Service", 1, "Original comment", new Money(100m));
-        job.ClearServices();
-
-        // Act
-        job.AddService("New Service", 2, "New comment", new Money(150m));
-
-        // Assert
-        job.ServiceItems.Should().HaveCount(1);
-        job.ServiceItems.First().ServiceName.Should().Be("New Service");
-        job.ServiceItems.First().Quantity.Should().Be(2);
-        job.ServiceItems.First().Comment.Should().Be("New comment");
-        job.ServiceItems.First().Price.Should().Be(new Money(150m));
-    }
-
-    [Fact]
-    public void AddNote_AfterClearNotes_ShouldAddNewNote()
-    {
-        // Arrange
-        var job = CreateValidJob();
-        job.AddNote("Original note");
-        job.ClearNotes();
-
-        // Act
-        job.AddNote("New note");
-
-        // Assert
+        job.Status.Should().Be(originalStatus); // Unchanged
+        job.Priority.Should().Be(originalPriority); // Unchanged
+        job.RequestedServiceDate.Should().Be(newDate); // Changed
         job.Notes.Should().HaveCount(1);
-        job.Notes.First().Note.Should().Be("New note");
-    }
-
-    [Fact]
-    public void MultipleUpdates_ShouldUpdateTimestampForEachChange()
-    {
-        // Arrange
-        var job = CreateValidJob();
-        var originalUpdatedAt = job.UpdatedAt;
-
-        // Act
-        job.UpdateStatus(JobStatus.InProgress);
-        var firstUpdate = job.UpdatedAt;
-        
-        job.UpdatePriority(JobPriority.Emergency);
-        var secondUpdate = job.UpdatedAt;
-        
-        job.UpdateJobCost(new Money(300m));
-        var thirdUpdate = job.UpdatedAt;
-
-        // Assert
-        firstUpdate.Should().BeAfter(originalUpdatedAt);
-        secondUpdate.Should().BeAfter(firstUpdate);
-        thirdUpdate.Should().BeAfter(secondUpdate);
+        job.Notes.First().Note.Should().Be($"Job updated: {reason}");
     }
 
     private Job CreateValidJob()

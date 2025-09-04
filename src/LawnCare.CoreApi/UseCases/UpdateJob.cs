@@ -22,7 +22,7 @@ public class UpdateJob : IEndpoint
                 RequestedServiceDate = request.RequestedServiceDate,
                 JobCost = request.JobCost,
                 ServiceItems = request.ServiceItems,
-                Notes = request.Notes
+                Reason = request.Reason
             });
 
             if (result.IsSuccess)
@@ -46,7 +46,7 @@ public record UpdateJobRequest
     public DateTimeOffset? RequestedServiceDate { get; set; }
     public decimal? JobCost { get; set; }
     public List<ServiceItemRequest>? ServiceItems { get; set; }
-    public List<string>? Notes { get; set; }
+    public string Reason { get; set; } = string.Empty;
 }
 
 public record ServiceItemRequest
@@ -65,18 +65,18 @@ public record UpdateJobCommand : IRequest<Result<ServiceRequestDto>>
     public DateTimeOffset? RequestedServiceDate { get; set; }
     public decimal? JobCost { get; set; }
     public List<ServiceItemRequest>? ServiceItems { get; set; }
-    public List<string>? Notes { get; set; }
+    public string Reason { get; set; } = string.Empty;
 }
 
 public class UpdateJobCommandHandler : IRequestHandler<UpdateJobCommand, Result<ServiceRequestDto>>
 {
     private readonly CoreDbContext _dbContext;
-    private readonly JobMappingService _mappingService;
+    private readonly IJobMappingService _mappingService;
     private readonly ILogger<UpdateJobCommandHandler> _logger;
 
     public UpdateJobCommandHandler(
         CoreDbContext dbContext,
-        JobMappingService mappingService,
+        IJobMappingService mappingService,
         ILogger<UpdateJobCommandHandler> logger)
     {
         _dbContext = dbContext;
@@ -99,59 +99,64 @@ public class UpdateJobCommandHandler : IRequestHandler<UpdateJobCommand, Result<
                 return Result<ServiceRequestDto>.Failure("Job not found");
             }
 
-            // Update job properties
+            // Parse enums
+            JobStatus? newStatus = null;
             if (!string.IsNullOrEmpty(request.Status) && Enum.TryParse<JobStatus>(request.Status, out var status))
             {
-                job.UpdateStatus(status);
+                newStatus = status;
             }
 
+            JobPriority? newPriority = null;
             if (!string.IsNullOrEmpty(request.Priority) && Enum.TryParse<JobPriority>(request.Priority, out var priority))
             {
-                job.UpdatePriority(priority);
+                newPriority = priority;
             }
 
-            if (request.RequestedServiceDate.HasValue)
-            {
-                job.UpdateRequestedServiceDate(request.RequestedServiceDate.Value);
-            }
-
-            if (request.JobCost.HasValue)
-            {
-                var newCost = new Money(request.JobCost.Value);
-                job.UpdateJobCost(newCost);
-            }
-
-            // Update service items
+            // Convert service items
+            List<JobLineItem>? newServiceItems = null;
             if (request.ServiceItems != null)
             {
-                job.ClearServices();
+                newServiceItems = new List<JobLineItem>();
                 foreach (var serviceItem in request.ServiceItems)
                 {
                     var price = serviceItem.Price.HasValue ? new Money(serviceItem.Price.Value) : null;
-                    job.AddService(serviceItem.ServiceName, serviceItem.Quantity, serviceItem.Comment, price);
+                    var jobLineItem = new JobLineItem(job.JobId, serviceItem.ServiceName, serviceItem.Quantity, serviceItem.Comment, price);
+                    newServiceItems.Add(jobLineItem);
                 }
             }
 
-            // Update notes
-            if (request.Notes != null)
+            // Convert job cost
+            Money? newJobCost = null;
+            if (request.JobCost.HasValue)
             {
-                job.ClearNotes();
-                foreach (var note in request.Notes.Where(n => !string.IsNullOrWhiteSpace(n)))
-                {
-                    job.AddNote(note);
-                }
+                newJobCost = new Money(request.JobCost.Value);
             }
+
+            // Update job using single method
+            job.UpdateJobDetails(
+                newStatus,
+                newPriority,
+                request.RequestedServiceDate,
+                newJobCost,
+                newServiceItems,
+                request.Reason
+            );
 
             await _dbContext.SaveChangesAsync(cancellationToken);
 
+            var location = _dbContext
+                .Locations
+                .AsNoTrackingWithIdentityResolution()
+                .First(l => l.LocationId == job.LocationId);
+
             // Map to DTO and return
-            var dto = await _mappingService.MapToServiceRequestDtoAsync(job);
+            var dto = _mappingService.MapToServiceRequestDto(job, location);
             return Result<ServiceRequestDto>.Success(dto);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating job {JobId}", request.JobId);
-            return Result<ServiceRequestDto>.Failure("An error occurred while updating the job");
+            _logger.LogError(ex, "Error updating job {JobId}: {Message}", request.JobId, ex.Message);
+            return Result<ServiceRequestDto>.Failure($"An error occurred while updating the job: {ex.Message}");
         }
     }
 }

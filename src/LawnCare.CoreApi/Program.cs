@@ -51,7 +51,7 @@ builder.Services.AddSingleton<QueryHandlerMetrics>();
 //builder.Services.AddTransient<IJobRepository, JobRepository>();
 //builder.Services.AddTransient<ICustomerRepository, CustomerRepository>();
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
-builder.Services.AddTransient<JobMappingService, JobMappingService>();
+builder.Services.AddTransient<IJobMappingService, JobMappingService>();
 builder.Services.AddDbContext<CoreDbContext>(dbContextOptionsBuilder =>
 {
 	dbContextOptionsBuilder.UseNpgsql(
