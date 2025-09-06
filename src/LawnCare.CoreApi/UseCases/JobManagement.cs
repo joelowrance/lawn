@@ -144,10 +144,10 @@ public class JobMappingService : IJobMappingService
 public class SearchJobsQueryHandler : IRequestHandler<SearchJobsQuery, List<ServiceRequestDto>>
 {
     private readonly CoreDbContext _dbContext;
-    private readonly JobMappingService _mappingService;
+    private readonly IJobMappingService _mappingService;
     private readonly ILogger<SearchJobsQueryHandler> _logger;
 
-    public SearchJobsQueryHandler(CoreDbContext dbContext, JobMappingService mappingService, ILogger<SearchJobsQueryHandler> logger)
+    public SearchJobsQueryHandler(CoreDbContext dbContext, IJobMappingService mappingService, ILogger<SearchJobsQueryHandler> logger)
     {
         _dbContext = dbContext;
         _mappingService = mappingService;
