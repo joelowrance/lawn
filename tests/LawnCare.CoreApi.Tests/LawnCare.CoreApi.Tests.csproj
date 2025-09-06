@@ -14,6 +14,7 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Moq" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="AutoFixture" />
@@ -25,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\LawnCare.CoreApi\LawnCare.CoreApi.csproj" />
-    <ProjectReference Include="..\..\LawnCare.Shared\LawnCare.Shared.csproj" />
+    <ProjectReference Include="..\..\src\LawnCare.CoreApi\LawnCare.CoreApi.csproj" />
+    <ProjectReference Include="..\..\src\LawnCare.Shared\LawnCare.Shared.csproj" />
   </ItemGroup>
 
 </Project>

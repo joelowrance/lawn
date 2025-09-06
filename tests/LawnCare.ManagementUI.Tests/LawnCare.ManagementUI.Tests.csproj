@@ -27,8 +27,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\LawnCare.ManagementUI\LawnCare.ManagementUI.csproj" />
-    <ProjectReference Include="..\..\LawnCare.Shared\LawnCare.Shared.csproj" />
+    <ProjectReference Include="..\..\src\LawnCare.ManagementUI\LawnCare.ManagementUI.csproj" />
+    <ProjectReference Include="..\..\src\LawnCare.Shared\LawnCare.Shared.csproj" />
   </ItemGroup>
 
 </Project>

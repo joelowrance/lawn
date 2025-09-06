@@ -126,4 +126,31 @@ public class CoreApiService : ICoreApiService
             throw;
         }
     }
+
+    public async Task<ServiceRequest> UpdateJobAsync(Guid jobId, UpdateJobRequest updateRequest)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(updateRequest, _jsonOptions);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            
+            var response = await _httpClient.PutAsync($"/jobs/{jobId}", content);
+            response.EnsureSuccessStatusCode();
+            
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var updatedJob = JsonSerializer.Deserialize<ServiceRequest>(responseJson, _jsonOptions);
+            
+            if (updatedJob == null)
+            {
+                throw new InvalidOperationException("CoreAPI returned null job after update");
+            }
+            
+            return updatedJob;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating job {JobId} in CoreAPI", jobId);
+            throw;
+        }
+    }
 }

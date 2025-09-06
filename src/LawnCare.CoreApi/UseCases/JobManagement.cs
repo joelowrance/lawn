@@ -11,7 +11,7 @@ public class JobManagement : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         // New unified search endpoint
-        app.MapGet("/jobs/search", async (IMediator mediator, 
+        app.MapGet("/jobs/search", async (IMediator mediator,
             Guid? id = null,
             string? status = null,
             DateTime? date = null,
@@ -66,9 +66,22 @@ public record SearchJobsQuery : IRequest<List<ServiceRequestDto>>
     public bool? Upcoming { get; init; }
 }
 
-// Shared Mapping Service
-public class JobMappingService
+// Shared Mapping Service Interface
+public interface IJobMappingService
 {
+    ServiceRequestDto MapToServiceRequestDto(Job job, Location? location = null);
+}
+
+// Shared Mapping Service
+public class JobMappingService : IJobMappingService
+{
+    private readonly CoreDbContext _dbContext;
+
+    public JobMappingService(CoreDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
     public ServiceRequestDto MapToServiceRequestDto(Job job, Location? location = null)
     {
         return new ServiceRequestDto
@@ -97,14 +110,14 @@ public class JobMappingService
 
     private static string GetCustomerName(Location? location)
     {
-        return location?.Owner != null 
+        return location?.Owner != null
             ? $"{location.Owner.FirstName} {location.Owner.LastName}"
             : "Customer Name";
     }
 
     private static string GetPropertyAddress(Location? location)
     {
-        return location != null 
+        return location != null
             ? $"{location.Street1}, {location.City}, {location.State} {location.Postcode.Value}"
             : "Property Address";
     }
@@ -119,6 +132,11 @@ public class JobMappingService
     {
         // TODO: Get from Location.Owner when email field is available
         return "N/A";
+    }
+
+    public ServiceRequestDto MapToServiceRequestDtoAsync(Job job, Location location)
+    {
+        return MapToServiceRequestDto(job, location);
     }
 }
 
@@ -169,8 +187,8 @@ public class SearchJobsQueryHandler : IRequestHandler<SearchJobsQuery, List<Serv
             var targetDate = request.Date.Value.Date;
             var startOfDay = new DateTimeOffset(targetDate, TimeSpan.Zero);
             var endOfDay = startOfDay.AddDays(1);
-            
-            query = query.Where(j => j.RequestedServiceDate.HasValue && 
+
+            query = query.Where(j => j.RequestedServiceDate.HasValue &&
                                   j.RequestedServiceDate >= startOfDay &&
                                   j.RequestedServiceDate < endOfDay);
         }
@@ -198,7 +216,7 @@ public class SearchJobsQueryHandler : IRequestHandler<SearchJobsQuery, List<Serv
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error searching jobs with parameters: jobId={JobId}, status={Status}, date={Date}, upcoming={Upcoming}", 
+            _logger.LogError(ex, "Error searching jobs with parameters: jobId={JobId}, status={Status}, date={Date}, upcoming={Upcoming}",
                 request.JobId, request.Status, request.Date, request.Upcoming);
             return new List<ServiceRequestDto>();
         }
@@ -214,7 +232,7 @@ public class SearchJobsQueryHandler : IRequestHandler<SearchJobsQuery, List<Serv
         var locationLookup = locations.ToDictionary(l => l.LocationId, l => l);
 
         // Map jobs to DTOs using the shared mapping service
-        return jobs.Select(job => 
+        return jobs.Select(job =>
         {
             var location = locationLookup.GetValueOrDefault(job.LocationId);
             return _mappingService.MapToServiceRequestDto(job, location);

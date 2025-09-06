@@ -60,11 +60,61 @@ namespace LawnCare.CoreApi.Domain.Entities
 			_services.Add(service);
 		}
 
-		public void AddNote(string content)
+			public void AddNote(string content)
+	{
+		var note = new JobNote(JobId, content.Trim());
+		_notes.Add(note);
+	}
+
+	public void UpdateJobDetails(JobStatus? newStatus, JobPriority? newPriority, DateTimeOffset? newRequestedServiceDate, Money? newJobCost, List<JobLineItem>? newServiceItems, string reason)
+	{
+		if (string.IsNullOrWhiteSpace(reason))
 		{
-			var note = new JobNote(JobId, content.Trim());
-			_notes.Add(note);
+			throw new ArgumentException("Reason is required for job updates", nameof(reason));
 		}
+
+		bool hasChanges = false;
+
+		if (newStatus.HasValue && newStatus.Value != Status)
+		{
+			Status = newStatus.Value;
+			hasChanges = true;
+		}
+
+		if (newPriority.HasValue && newPriority.Value != Priority)
+		{
+			Priority = newPriority.Value;
+			hasChanges = true;
+		}
+
+		if (newRequestedServiceDate != RequestedServiceDate)
+		{
+			RequestedServiceDate = newRequestedServiceDate;
+			hasChanges = true;
+		}
+
+		if (newJobCost != null && newJobCost != JobCost)
+		{
+			JobCost = newJobCost;
+			hasChanges = true;
+		}
+
+		if (newServiceItems != null)
+		{
+			_services.Clear();
+			foreach (var serviceItem in newServiceItems)
+			{
+				_services.Add(serviceItem);
+			}
+			hasChanges = true;
+		}
+
+		if (hasChanges)
+		{
+			UpdatedAt = DateTimeOffset.UtcNow;
+			AddNote($"Job updated: {reason.Trim()}");
+		}
+	}
 	}
 	
 	public record JobCreatedDomainEvent(JobId JobId) : IDomainEvent;
