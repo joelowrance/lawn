@@ -41,6 +41,7 @@ builder.Services.AddHttpClient<LawnCare.ManagementUI.Services.ICoreApiService, L
 
 // Add application services
 builder.Services.AddScoped<LawnCare.ManagementUI.Services.ISchedulingService, LawnCare.ManagementUI.Services.SchedulingService>();
+builder.Services.AddScoped<LawnCare.ManagementUI.Services.ITechnicianService, LawnCare.ManagementUI.Services.TechnicianService>();
 
 var app = builder.Build();
 

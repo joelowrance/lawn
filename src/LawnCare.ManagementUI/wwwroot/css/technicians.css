@@ -1,0 +1,317 @@
+/* Technician Management Styles */
+
+.technicians-dashboard {
+    padding: var(--spacing-xl);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.technicians-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-xl);
+    margin-top: var(--spacing-xl);
+}
+
+.technician-card {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.technician-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
+}
+
+.technician-photo {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+    background: var(--gray-100);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.technician-photo .photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+}
+
+.status-indicator {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-primary);
+}
+
+.status-indicator.status-active {
+    background-color: var(--success-color);
+}
+
+.status-indicator.status-inactive {
+    background-color: var(--gray-400);
+}
+
+.status-indicator.status-on-leave {
+    background-color: var(--warning-color);
+}
+
+.status-indicator.status-terminated {
+    background-color: var(--error-color);
+}
+
+.technician-info {
+    padding: var(--spacing-lg);
+}
+
+.technician-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-sm) 0;
+    line-height: 1.2;
+}
+
+.technician-specialization {
+    font-size: 0.75rem;
+    color: var(--primary-color);
+    font-weight: 600;
+    margin: 0 0 var(--spacing-sm) 0;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background: var(--primary-color);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    display: inline-block;
+}
+
+.technician-details {
+    margin-bottom: var(--spacing-sm);
+}
+
+.technician-details .detail-item {
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.875rem;
+    padding: 0;
+    min-height: 24px;
+    flex-wrap: nowrap;
+}
+
+.technician-details .detail-icon {
+    margin-right: var(--spacing-sm);
+    font-size: 1rem;
+    width: 16px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.technician-details .detail-text {
+    color: var(--text-secondary);
+    flex: 1;
+    word-break: break-word;
+    line-height: 1.3;
+    display: inline-block;
+}
+
+.technician-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--gray-200);
+    margin-top: var(--spacing-sm);
+}
+
+.status-badge {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    min-width: 60px;
+    text-align: center;
+}
+
+.status-badge.status-active {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.status-badge.status-inactive {
+    background-color: var(--gray-400);
+    color: white;
+}
+
+.status-badge.status-on-leave {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.status-badge.status-terminated {
+    background-color: var(--error-color);
+    color: white;
+}
+
+.license-info {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-family: monospace;
+    background: var(--gray-100);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--gray-200);
+}
+
+/* Modal Styles for Technician Details */
+.technician-detail {
+    display: flex;
+    gap: var(--spacing-xl);
+}
+
+.technician-photo-large {
+    flex-shrink: 0;
+    width: 150px;
+    height: 150px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--gray-100);
+}
+
+.photo-large {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.technician-details h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.specialization {
+    color: var(--primary-color);
+    font-weight: 500;
+    margin: 0 0 var(--spacing-lg) 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.875rem;
+}
+
+.detail-grid {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+.detail-item {
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.detail-item label {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.detail-item span {
+    color: var(--text-secondary);
+    text-align: right;
+}
+
+.notes-section {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--gray-200);
+}
+
+.notes-section label {
+    font-weight: 500;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: var(--spacing-sm);
+}
+
+.notes-section p {
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+}
+
+/* Responsive adjustments for technician page */
+@media (max-width: 1200px) {
+    .technicians-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .technicians-dashboard {
+        padding: var(--spacing-md);
+    }
+
+    .technicians-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+    }
+
+    .technician-card {
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .technician-info {
+        padding: var(--spacing-lg);
+    }
+
+    .technician-footer {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: flex-start;
+    }
+
+    .technician-detail {
+        flex-direction: column;
+        gap: var(--spacing-lg);
+    }
+
+    .technician-photo-large {
+        width: 100px;
+        height: 100px;
+        align-self: center;
+    }
+
+    .detail-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+
+    .detail-item span {
+        text-align: left;
+    }
+}

@@ -1,5 +1,6 @@
 @page "/"
 @attribute [Authorize]
+@inject NavigationManager NavigationManager
 
 <PageTitle>Dashboard - Lawn Care Management</PageTitle>
 
@@ -24,7 +25,7 @@
                 <div class="stat-change positive">+3 from yesterday</div>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon">👥</div>
             <div class="stat-content">
@@ -33,7 +34,7 @@
                 <div class="stat-change positive">+12 this week</div>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon">💰</div>
             <div class="stat-content">
@@ -42,7 +43,7 @@
                 <div class="stat-change positive">+15% from last week</div>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon">🌡️</div>
             <div class="stat-content">
@@ -64,7 +65,7 @@
                     <button class="action-button">Schedule Now</button>
                 </div>
             </div>
-            
+
             <div class="action-card">
                 <div class="action-icon">👥</div>
                 <div class="action-content">
@@ -73,7 +74,16 @@
                     <button class="action-button">Add Customer</button>
                 </div>
             </div>
-            
+
+            <div class="action-card">
+                <div class="action-icon">👷</div>
+                <div class="action-content">
+                    <h3 class="action-title">Manage Technicians</h3>
+                    <p class="action-description">View and manage your technician team</p>
+                    <button class="action-button" @onclick="NavigateToTechnicians">View Technicians</button>
+                </div>
+            </div>
+
             <div class="action-card">
                 <div class="action-icon">🗺️</div>
                 <div class="action-content">
@@ -82,7 +92,7 @@
                     <button class="action-button">Plan Routes</button>
                 </div>
             </div>
-            
+
             <div class="action-card">
                 <div class="action-icon">📊</div>
                 <div class="action-content">
@@ -121,3 +131,10 @@
         </div>
     </div>
 </div>
+
+@code {
+    private void NavigateToTechnicians()
+    {
+        NavigationManager.NavigateTo("/technicians");
+    }
+}

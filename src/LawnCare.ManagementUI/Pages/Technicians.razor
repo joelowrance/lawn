@@ -1,0 +1,244 @@
+@page "/technicians"
+@attribute [Authorize]
+@using LawnCare.ManagementUI.Models
+@using LawnCare.ManagementUI.Services
+@inject ITechnicianService TechnicianService
+@inject ILogger<Technicians> Logger
+@inject NavigationManager NavigationManager
+
+<PageTitle>Technicians - Lawn Care Management</PageTitle>
+
+<div class="technicians-dashboard">
+    <div class="dashboard-header">
+        <div class="header-content">
+            <h1 class="page-title">Technician Management</h1>
+            <p class="page-subtitle">Manage your lawn care technicians and their information</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary" @onclick="ShowNewTechnicianModal">
+                <span class="btn-icon">➕</span>
+                Add Technician
+            </button>
+        </div>
+    </div>
+
+    <div class="filters-section">
+        <div class="filter-group">
+            <label class="filter-label">Filter by Status:</label>
+            <select class="filter-select" @bind="selectedStatus" @bind:after="FilterTechnicians">
+                <option value="">All Statuses</option>
+                <option value="@TechnicianStatus.Active">Active</option>
+                <option value="@TechnicianStatus.Inactive">Inactive</option>
+                <option value="@TechnicianStatus.OnLeave">On Leave</option>
+                <option value="@TechnicianStatus.Terminated">Terminated</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label">Filter by Specialization:</label>
+            <select class="filter-select" @bind="selectedSpecialization" @bind:after="FilterTechnicians">
+                <option value="">All Specializations</option>
+                <option value="@TechnicianSpecialization.LawnCare">Lawn Care</option>
+                <option value="@TechnicianSpecialization.TreeService">Tree Service</option>
+                <option value="@TechnicianSpecialization.Landscaping">Landscaping</option>
+                <option value="@TechnicianSpecialization.SnowRemoval">Snow Removal</option>
+                <option value="@TechnicianSpecialization.General">General</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label">Search:</label>
+            <input type="text" class="filter-input" placeholder="Search technicians..." @bind="searchTerm" @oninput="FilterTechnicians" />
+        </div>
+    </div>
+
+    <div class="technicians-container">
+        @if (isLoading)
+        {
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading technicians...</p>
+            </div>
+        }
+        else if (filteredTechnicians.Any())
+        {
+            <div class="technicians-grid">
+                @foreach (var technician in filteredTechnicians)
+                {
+                    <div class="technician-card" @onclick="() => ShowTechnicianDetails(technician.Id)">
+                        <div class="technician-photo">
+                            <img src="@technician.PhotoUrl" alt="@technician.FullName" class="photo" />
+                            <div class="status-indicator status-@technician.Status.ToLower().Replace(" ", "-")"></div>
+                        </div>
+
+                        <div class="technician-info">
+                            <h3 class="technician-name">@technician.FullName</h3>
+                            <p class="technician-specialization">@technician.Specialization</p>
+
+                            <div class="technician-details">
+                                <div class="detail-item">
+                                    <span class="detail-icon">📱</span>
+                                    <span class="detail-text">@technician.CellPhone</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-icon">📍</span>
+                                    <span class="detail-text">@technician.Address</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-icon">⏰</span>
+                                    <span class="detail-text">@technician.ExperienceDisplay</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-icon">📧</span>
+                                    <span class="detail-text">@technician.Email</span>
+                                </div>
+                            </div>
+
+                            <div class="technician-footer">
+                                <div class="status-badge status-@technician.Status.ToLower().Replace(" ", "-")">
+                                    @technician.Status
+                                </div>
+                                <div class="license-info">
+                                    License: @technician.LicenseNumber
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">👷</div>
+                <h3>No technicians found</h3>
+                <p>No technicians match your current filters. Try adjusting your search criteria.</p>
+                <button class="btn btn-primary" @onclick="ClearFilters">Clear Filters</button>
+            </div>
+        }
+    </div>
+</div>
+
+@if (showTechnicianModal)
+{
+    <TechnicianDetailModal TechnicianId="(Guid)selectedTechnicianId!" OnClose="CloseTechnicianModal" />
+}
+
+@if (showNewTechnicianModal)
+{
+    <NewTechnicianModal IsVisible="showNewTechnicianModal" OnClose="CloseNewTechnicianModal" OnTechnicianCreated="HandleTechnicianCreated" />
+}
+
+@code {
+    private List<Technician> filteredTechnicians = new();
+    private bool isLoading = true;
+    private bool showTechnicianModal = false;
+    private bool showNewTechnicianModal = false;
+    private Guid? selectedTechnicianId = Guid.Empty;
+
+    private string selectedStatus = "";
+    private string selectedSpecialization = "";
+    private string searchTerm = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTechnicians();
+    }
+
+    private async Task LoadTechnicians()
+    {
+        await FilterTechnicians();
+    }
+
+    private async Task FilterTechnicians()
+    {
+        isLoading = true;
+
+        try
+        {
+            var allTechnicians = await TechnicianService.GetAllTechniciansAsync();
+
+            // Apply filters
+            var filtered = allTechnicians.AsQueryable();
+
+            if (!string.IsNullOrEmpty(selectedStatus))
+            {
+                filtered = filtered.Where(t => t.Status == selectedStatus);
+            }
+
+            if (!string.IsNullOrEmpty(selectedSpecialization))
+            {
+                filtered = filtered.Where(t => t.Specialization == selectedSpecialization);
+            }
+
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                var term = searchTerm.ToLowerInvariant();
+                filtered = filtered.Where(t =>
+                    t.FirstName.ToLowerInvariant().Contains(term) ||
+                    t.LastName.ToLowerInvariant().Contains(term) ||
+                    t.FullName.ToLowerInvariant().Contains(term) ||
+                    t.Specialization.ToLowerInvariant().Contains(term) ||
+                    t.Email.ToLowerInvariant().Contains(term)
+                );
+            }
+
+            filteredTechnicians = filtered.ToList();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error filtering technicians");
+            filteredTechnicians = new List<Technician>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowTechnicianDetails(Guid technicianId)
+    {
+        selectedTechnicianId = technicianId;
+        showTechnicianModal = true;
+    }
+
+    private void CloseTechnicianModal()
+    {
+        showTechnicianModal = false;
+        selectedTechnicianId = null;
+    }
+
+    private void ShowNewTechnicianModal()
+    {
+        showNewTechnicianModal = true;
+    }
+
+    private void CloseNewTechnicianModal()
+    {
+        showNewTechnicianModal = false;
+    }
+
+    private async Task HandleTechnicianCreated(Technician technician)
+    {
+        try
+        {
+            Logger.LogInformation("Creating technician: {FirstName} {LastName}", technician.FirstName, technician.LastName);
+            var newTechnician = await TechnicianService.CreateTechnicianAsync(technician);
+            Logger.LogInformation("Technician created successfully with ID: {TechnicianId}", newTechnician.Id);
+            await LoadTechnicians(); // Refresh the technicians list
+            showNewTechnicianModal = false;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating technician {FirstName} {LastName}", technician.FirstName, technician.LastName);
+        }
+    }
+
+    private async Task ClearFilters()
+    {
+        selectedStatus = "";
+        selectedSpecialization = "";
+        searchTerm = "";
+        await FilterTechnicians();
+    }
+}

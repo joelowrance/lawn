@@ -1,0 +1,142 @@
+@using LawnCare.ManagementUI.Models
+@using LawnCare.ManagementUI.Services
+@inject ITechnicianService TechnicianService
+@inject ILogger<NewTechnicianModal> Logger
+
+@if (IsVisible)
+{
+    <div class="modal-overlay" @onclick="OnClose">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Technician</h2>
+                <button class="modal-close" @onclick="OnClose">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <EditForm Model="technician" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name *</label>
+                            <InputText id="firstName" @bind-Value="technician.FirstName" class="form-control" />
+                            <ValidationMessage For="@(() => technician.FirstName)" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lastName">Last Name *</label>
+                            <InputText id="lastName" @bind-Value="technician.LastName" class="form-control" />
+                            <ValidationMessage For="@(() => technician.LastName)" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cellPhone">Cell Phone *</label>
+                            <InputText id="cellPhone" @bind-Value="technician.CellPhone" class="form-control" />
+                            <ValidationMessage For="@(() => technician.CellPhone)" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <InputText id="email" @bind-Value="technician.Email" class="form-control" />
+                            <ValidationMessage For="@(() => technician.Email)" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address">Address *</label>
+                        <InputTextArea id="address" @bind-Value="technician.Address" class="form-control" rows="2" />
+                        <ValidationMessage For="@(() => technician.Address)" />
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="specialization">Specialization *</label>
+                            <InputSelect id="specialization" @bind-Value="technician.Specialization" class="form-control">
+                                <option value="">Select Specialization</option>
+                                <option value="@TechnicianSpecialization.LawnCare">@TechnicianSpecialization.LawnCare</option>
+                                <option value="@TechnicianSpecialization.TreeService">@TechnicianSpecialization.TreeService</option>
+                                <option value="@TechnicianSpecialization.Landscaping">@TechnicianSpecialization.Landscaping</option>
+                                <option value="@TechnicianSpecialization.SnowRemoval">@TechnicianSpecialization.SnowRemoval</option>
+                                <option value="@TechnicianSpecialization.General">@TechnicianSpecialization.General</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => technician.Specialization)" />
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="status">Status *</label>
+                            <InputSelect id="status" @bind-Value="technician.Status" class="form-control">
+                                <option value="@TechnicianStatus.Active">@TechnicianStatus.Active</option>
+                                <option value="@TechnicianStatus.Inactive">@TechnicianStatus.Inactive</option>
+                                <option value="@TechnicianStatus.OnLeave">@TechnicianStatus.OnLeave</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => technician.Status)" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <InputTextArea id="notes" @bind-Value="technician.Notes" class="form-control" rows="3" />
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" @onclick="OnClose">Cancel</button>
+                        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner"></span>
+                            }
+                            Add Technician
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<Technician> OnTechnicianCreated { get; set; }
+    
+    private Technician technician = new();
+    private bool isSubmitting = false;
+
+    protected override void OnInitialized()
+    {
+        ResetForm();
+    }
+
+    private void ResetForm()
+    {
+        technician = new Technician
+        {
+            Status = TechnicianStatus.Active,
+            Specialization = TechnicianSpecialization.General,
+            YearsWithCompany = 0,
+            MonthsWithCompany = 0,
+            HireDate = DateTime.UtcNow
+        };
+    }
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        
+        try
+        {
+            await OnTechnicianCreated.InvokeAsync(technician);
+            ResetForm();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating technician");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

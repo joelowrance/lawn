@@ -1,0 +1,110 @@
+@using LawnCare.ManagementUI.Models
+@using LawnCare.ManagementUI.Services
+@inject ITechnicianService TechnicianService
+@inject ILogger<TechnicianDetailModal> Logger
+
+<div class="modal-overlay" @onclick="OnClose">
+    <div class="modal-content" @onclick:stopPropagation="true">
+        <div class="modal-header">
+            <h2 class="modal-title">Technician Details</h2>
+            <button class="modal-close" @onclick="OnClose">×</button>
+        </div>
+        
+        <div class="modal-body">
+            @if (isLoading)
+            {
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Loading technician details...</p>
+                </div>
+            }
+            else if (technician != null)
+            {
+                <div class="technician-detail">
+                    <div class="technician-photo-large">
+                        <img src="@technician.PhotoUrl" alt="@technician.FullName" class="photo-large" />
+                    </div>
+                    
+                    <div class="technician-details">
+                        <h3>@technician.FullName</h3>
+                        <p class="specialization">@technician.Specialization</p>
+                        
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <label>Phone:</label>
+                                <span>@technician.CellPhone</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Email:</label>
+                                <span>@technician.Email</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Address:</label>
+                                <span>@technician.Address</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Experience:</label>
+                                <span>@technician.ExperienceDisplay</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Status:</label>
+                                <span class="status-badge status-@technician.Status.ToLower().Replace(" ", "-")">@technician.Status</span>
+                            </div>
+                            <div class="detail-item">
+                                <label>License:</label>
+                                <span>@technician.LicenseNumber</span>
+                            </div>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(technician.Notes))
+                        {
+                            <div class="notes-section">
+                                <label>Notes:</label>
+                                <p>@technician.Notes</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="error-state">
+                    <p>Technician not found</p>
+                </div>
+            }
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-secondary" @onclick="OnClose">Close</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid TechnicianId { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    
+    private Technician? technician;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTechnician();
+    }
+
+    private async Task LoadTechnician()
+    {
+        try
+        {
+            technician = await TechnicianService.GetTechnicianByIdAsync(TechnicianId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading technician {TechnicianId}", TechnicianId);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -2,12 +2,19 @@
 # Agents.MD - Lawn Care & Tree Service Management Platform
 
 ## Project Overview
+
 This is a distributed, multi-tenant SaaS application serving lawn care and tree specialist companies. The system provides comprehensive business management tools including scheduling, customer management, invoicing, and service tracking.
 
 ## Setup
+
 This solution uses `directory.build.props` and `directory.package.props`
 
+## Git
+
+Agents never commit main, they always commit to their own branch.
+
 ## Architecture
+
 - **Pattern**: Multi-tenant distributed architecture
 - **Primary Language**: C# (.NET 8+)
 - **Frontend**: Blazor Server/WebAssembly for Management UI
@@ -19,12 +26,14 @@ This solution uses `directory.build.props` and `directory.package.props`
 ## Tenant Architecture Guidelines
 
 ### Tenant Isolation Strategy
+
 - Use tenant-per-schema approach for data isolation
 - Implement tenant context middleware for request routing
 - Ensure all database queries include tenant filtering
 - Use tenant-specific configuration management
 
 ### Key Patterns
+
 ```csharp
 // Always inject ITenantContext
 public class ServiceController : ControllerBase
@@ -41,6 +50,7 @@ public class ServiceController : ControllerBase
 ## Domain Model Context
 
 ### Core Business Entities
+
 - **Customer**: Property owners requiring lawn/tree services
 - **Property**: Service locations with specific requirements
 - **ServiceRequest**: Work orders for lawn care or tree services
@@ -50,6 +60,7 @@ public class ServiceController : ControllerBase
 - **Equipment**: Tools and machinery management
 
 ### Service Types
+
 - **Lawn Care**: Mowing, fertilization, weed control, aeration
 - **Tree Services**: Pruning, removal, disease treatment, planting
 - **Seasonal Services**: Leaf cleanup, snow removal, holiday lighting
@@ -57,12 +68,14 @@ public class ServiceController : ControllerBase
 ## Management UI Guidelines
 
 ### Component Architecture
+
 - Use Blazor components with clear separation of concerns
 - Implement base classes for common CRUD operations
 - Follow the Repository + Unit of Work pattern
 - Do not use AutoMapper for DTO mapping, find something else.
 
 ### UI/UX Patterns
+
 - **Dashboard**: Real-time metrics, weather integration, daily schedules
 - **Calendar Views**: Drag-drop scheduling, route optimization
 - **Customer Management**: Property details, service history, preferences
@@ -70,6 +83,7 @@ public class ServiceController : ControllerBase
 - **Offline Capability**: Essential for field operations
 
 ### State Management
+
 ```csharp
 // Use Fluxor for complex state management
 public class ScheduleState
@@ -83,12 +97,14 @@ public class ScheduleState
 ## Coding Standards
 
 ### Naming Conventions
+
 - Use PascalCase for public members
 - Use camelCase for private fields and parameters
 - Prefix interfaces with 'I'
 - Use meaningful, domain-specific names
 
 ### Project Structure
+
 ```
 src/
 ├── LawnCare.Core/              # Domain entities and interfaces
@@ -101,12 +117,14 @@ src/
 ```
 
 ### Exception Handling
+
 - Use domain-specific exceptions
 - Implement global exception handling middleware
 - Log tenant context with all errors
 - Return user-friendly error messages
 
 ### Security Considerations
+
 - Always validate tenant access in controllers
 - Implement role-based authorization (Admin, Manager, Technician, Customer)
 - Sanitize all user inputs
@@ -116,6 +134,7 @@ src/
 ## Common Development Tasks
 
 ### Adding New Management Features
+
 1. Create domain entity in Core project
 2. Add repository interface and implementation
 3. Create CQRS commands/queries
@@ -124,11 +143,13 @@ src/
 6. Write unit tests with tenant isolation
 
 ### Database Migrations
+
 - Always include tenant context in migration scripts
 - Test migrations against multiple tenant schemas
 - Document breaking changes and rollback procedures
 
 ### API Development
+
 - Follow RESTful conventions
 - Include tenant validation in all endpoints
 - Use consistent response formats
@@ -138,17 +159,20 @@ src/
 ## Testing Guidelines
 
 ### Unit Tests
+
 - Mock tenant context in all tests
 - Use AutoFixture for test data generation
 - Test multi-tenant scenarios explicitly
 - Achieve 80%+ code coverage
 
 ### Integration Tests
+
 - Test with multiple tenant configurations
 - Validate data isolation between tenants
 - Test authentication and authorization flows
 
 ## Performance Considerations
+
 - Implement caching strategies per tenant
 - Use async/await consistently
 - Optimize database queries with proper indexing
@@ -156,6 +180,7 @@ src/
 - Monitor tenant resource usage
 
 ## Deployment & DevOps
+
 - Use Docker containers for consistent environments
 - Implement blue-green deployments
 - Monitor tenant-specific metrics
@@ -165,6 +190,7 @@ src/
 ## Business Logic Helpers
 
 When implementing features, consider these domain-specific requirements:
+
 - **Seasonal Variations**: Adjust service frequencies based on growing seasons
 - **Weather Integration**: Cancel/reschedule based on weather conditions
 - **Equipment Tracking**: Monitor maintenance schedules and availability
@@ -172,12 +198,14 @@ When implementing features, consider these domain-specific requirements:
 - **Regulatory Compliance**: Track pesticide applications and certifications
 
 ## Emergency Procedures
+
 - Implement circuit breakers for external service calls
 - Have fallback procedures for critical operations
 - Maintain separate monitoring per tenant
 - Document incident response procedures
 
 ## Learning Resources
+
 - Focus on distributed system patterns
 - Study multi-tenancy best practices
 - Learn about lawn care industry workflows
