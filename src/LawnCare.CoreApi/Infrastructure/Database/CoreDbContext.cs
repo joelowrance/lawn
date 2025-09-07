@@ -33,6 +33,7 @@ namespace LawnCare.CoreApi.Infrastructure.Database
 		public DbSet<Job> Jobs { get; set; }
 		public DbSet<Customer> Customers { get; set; }
 		public DbSet<Location> Locations { get; set; }
+		public DbSet<Technician> Technicians { get; set; }
 		
 		// Comparers
 		public static ValueComparer<PhoneNumber> PhoneNumberComparer => new ValueComparer<PhoneNumber>
@@ -145,14 +146,18 @@ namespace LawnCare.CoreApi.Infrastructure.Database
 				}
 			}
 
-			// Configure DateTime properties to use UTC
+			// Configure DateTime properties for PostgreSQL
 			foreach (var entityType in modelBuilder.Model.GetEntityTypes())
 			{
 				foreach (var property in entityType.GetProperties())
 				{
 					if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
 					{
-						property.SetColumnType("datetime2");
+						// Only set column type if not already explicitly configured
+						if (property.GetColumnType() == null)
+						{
+							property.SetColumnType("timestamp");
+						}
 					}
 				}
 			}
