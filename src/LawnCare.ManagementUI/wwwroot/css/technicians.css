@@ -4,44 +4,108 @@
     padding: var(--spacing-xl);
     max-width: 1400px;
     margin: 0 auto;
+    min-height: 100vh;
+}
+
+.technicians-container {
+    min-height: 400px;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+    text-align: center;
+    color: var(--text-secondary);
+    background: var(--bg-primary);
+    border-radius: var(--radius-xl);
+    border: 2px dashed var(--gray-300);
+    margin: var(--spacing-xl) 0;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.empty-state p {
+    margin: 0 0 var(--spacing-lg) 0;
+    max-width: 400px;
+    line-height: 1.6;
 }
 
 .technicians-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: var(--spacing-xl);
     margin-top: var(--spacing-xl);
+    padding: 0 var(--spacing-md);
 }
 
 .technician-card {
     background: var(--bg-primary);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
     border: 1px solid var(--gray-200);
     overflow: hidden;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     cursor: pointer;
+    position: relative;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
 }
 
 .technician-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     border-color: var(--primary-color);
+}
+
+.technician-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.technician-card:hover::before {
+    opacity: 1;
 }
 
 .technician-photo {
     position: relative;
-    height: 180px;
+    height: 200px;
     overflow: hidden;
-    background: var(--gray-100);
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
 .technician-photo .photo {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center top;
+    object-position: center;
+    transition: transform 0.3s ease;
+}
+
+.technician-card:hover .technician-photo .photo {
+    transform: scale(1.05);
 }
 
 .status-indicator {
@@ -71,79 +135,111 @@
 }
 
 .technician-info {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    flex: 1;
 }
 
 .technician-name {
-    font-size: 1.25rem;
+    font-size: 1.375rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin: 0 0 var(--spacing-sm) 0;
-    line-height: 1.2;
+    margin: 0;
+    line-height: 1.3;
+    text-align: center;
 }
 
 .technician-specialization {
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     color: var(--primary-color);
     font-weight: 600;
-    margin: 0 0 var(--spacing-sm) 0;
+    margin: 0;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    background: var(--primary-color);
+    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: white;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--radius-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
     display: inline-block;
+    text-align: center;
+    align-self: center;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
 .technician-details {
-    margin-bottom: var(--spacing-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-lg) 0;
+    text-align: left;
 }
 
 .technician-details .detail-item {
+    display: flex !important;
+    flex-direction: row !important;
     align-items: center;
-    margin-bottom: var(--spacing-sm);
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) 0;
     font-size: 0.875rem;
-    padding: 0;
-    min-height: 24px;
-    flex-wrap: nowrap;
+    transition: all 0.2s ease;
+}
+
+.technician-details .detail-item:hover {
+    background: var(--gray-50);
+    padding-left: var(--spacing-sm);
+    border-radius: var(--radius-sm);
 }
 
 .technician-details .detail-icon {
-    margin-right: var(--spacing-sm);
-    font-size: 1rem;
-    width: 16px;
-    flex-shrink: 0;
+    font-size: 1.125rem;
+    width: 20px;
+    height: 20px;
+    display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--primary-color);
+    flex-shrink: 0;
+    margin: 0;
 }
 
 .technician-details .detail-text {
     color: var(--text-secondary);
+    font-weight: 500;
+    line-height: 1.4;
     flex: 1;
     word-break: break-word;
-    line-height: 1.3;
-    display: inline-block;
+    margin: 0;
+    text-align: left;
 }
 
 .technician-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background: var(--bg-secondary);
     border-top: 1px solid var(--gray-200);
-    margin-top: var(--spacing-sm);
+    margin-top: auto;
+    gap: var(--spacing-md);
 }
 
 .status-badge {
     padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    min-width: 60px;
+    letter-spacing: 0.05em;
+    min-width: 80px;
     text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.status-badge:hover {
+    transform: scale(1.05);
 }
 
 .status-badge.status-active {
@@ -168,12 +264,21 @@
 
 .license-info {
     font-size: 0.75rem;
-    color: var(--text-tertiary);
-    font-family: monospace;
-    background: var(--gray-100);
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--gray-200);
+    color: var(--text-secondary);
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    background: var(--bg-primary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-300);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    flex: 1;
+    text-align: center;
+}
+
+.license-info:hover {
+    background: var(--gray-50);
+    border-color: var(--primary-color);
 }
 
 /* Modal Styles for Technician Details */
@@ -266,7 +371,8 @@
 /* Responsive adjustments for technician page */
 @media (max-width: 1200px) {
     .technicians-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: var(--spacing-lg);
     }
 }
 
@@ -278,6 +384,7 @@
     .technicians-grid {
         grid-template-columns: 1fr;
         gap: var(--spacing-lg);
+        padding: 0;
     }
 
     .technician-card {
@@ -288,10 +395,16 @@
         padding: var(--spacing-lg);
     }
 
+
     .technician-footer {
         flex-direction: column;
         gap: var(--spacing-sm);
-        align-items: flex-start;
+        align-items: stretch;
+    }
+
+    .status-badge,
+    .license-info {
+        text-align: center;
     }
 
     .technician-detail {
@@ -305,13 +418,4 @@
         align-self: center;
     }
 
-    .detail-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-xs);
-    }
-
-    .detail-item span {
-        text-align: left;
-    }
 }
