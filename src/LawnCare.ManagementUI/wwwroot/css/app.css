@@ -2057,6 +2057,79 @@ html {
     padding-left: var(--spacing-lg);
 }
 
+/* Error Summary Styles */
+.error-summary {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    color: var(--error-color);
+    font-size: 0.875rem;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.1);
+}
+
+.error-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    flex-shrink: 0;
+}
+
+.error-icon {
+    font-size: 1.25rem;
+    color: var(--error-color);
+}
+
+.error-message {
+    flex: 1;
+    line-height: 1.5;
+    margin-bottom: var(--spacing-sm);
+}
+
+.error-dismiss {
+    background: transparent;
+    border: 1px solid var(--error-color);
+    color: var(--error-color);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+    align-self: flex-start;
+}
+
+.error-dismiss:hover {
+    background: var(--error-color);
+    color: var(--text-white);
+    transform: translateY(-1px);
+}
+
+/* Responsive error summary */
+@media (max-width: 768px) {
+    .error-summary {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-sm);
+    }
+
+    .error-header {
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .error-dismiss {
+        align-self: stretch;
+        text-align: center;
+    }
+}
+
 .services-container {
     display: flex;
     flex-direction: column;

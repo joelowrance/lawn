@@ -39,9 +39,16 @@ builder.Services.AddHttpClient<LawnCare.ManagementUI.Services.ICoreApiService, L
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+// Add HTTP client for TechnicianService
+builder.Services.AddHttpClient<LawnCare.ManagementUI.Services.ITechnicianService, LawnCare.ManagementUI.Services.TechnicianService>(client =>
+{
+    var coreApiUrl = builder.Configuration["CoreApi:BaseUrl"] ?? "https://localhost:7103";
+    client.BaseAddress = new Uri(coreApiUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 // Add application services
 builder.Services.AddScoped<LawnCare.ManagementUI.Services.ISchedulingService, LawnCare.ManagementUI.Services.SchedulingService>();
-builder.Services.AddScoped<LawnCare.ManagementUI.Services.ITechnicianService, LawnCare.ManagementUI.Services.TechnicianService>();
 
 var app = builder.Build();
 

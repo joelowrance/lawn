@@ -27,16 +27,20 @@ builder.Services.AddMediatR(cfg =>
 	cfg.AddOpenBehavior(typeof(HandlerBehavior<,>));
 });
 builder.Services.AddValidatorsFromAssemblyContaining<Program>(includeInternalTypes: true);
-builder.Services.AddMassTransit(x =>
+// Only configure MassTransit when running in Aspire (when RabbitMQ connection string is available)
+if (!string.IsNullOrEmpty(builder.Configuration.GetConnectionString("rabbitmq")))
 {
-	//x.AddConsumer<MoveJobToPendingCommandConsumer>(typeof(MoveJobToPendingCommandConsumerDefinition));
-	x.SetKebabCaseEndpointNameFormatter();
-	x.UsingRabbitMq((context, configuration) =>
-	{
-		configuration.Host(builder.Configuration.GetConnectionString("rabbitmq"));
-		configuration.ConfigureEndpoints(context);
-	});
-});
+    builder.Services.AddMassTransit(x =>
+    {
+        //x.AddConsumer<MoveJobToPendingCommandConsumer>(typeof(MoveJobToPendingCommandConsumerDefinition));
+        x.SetKebabCaseEndpointNameFormatter();
+        x.UsingRabbitMq((context, configuration) =>
+        {
+            configuration.Host(builder.Configuration.GetConnectionString("rabbitmq"));
+            configuration.ConfigureEndpoints(context);
+        });
+    });
+}
 // Register MassTransit.Mediator, good luck not confusing this with the other one
 builder.Services.AddMediator(cfg =>
 {
@@ -52,13 +56,23 @@ builder.Services.AddSingleton<QueryHandlerMetrics>();
 //builder.Services.AddTransient<ICustomerRepository, CustomerRepository>();
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 builder.Services.AddTransient<IJobMappingService, JobMappingService>();
+builder.Services.AddTransient<ITechnicianMappingService, TechnicianMappingService>();
 builder.Services.AddDbContext<CoreDbContext>(dbContextOptionsBuilder =>
 {
-	dbContextOptionsBuilder.UseNpgsql(
-			builder.Configuration.GetConnectionString("job-connection"))
+	var connectionString = builder.Configuration.GetConnectionString("job-connection");
+	if (string.IsNullOrEmpty(connectionString))
+	{
+		// When running outside of Aspire, use a default connection string for development
+		connectionString = "Host=localhost;Port=5432;Database=Core;Username=sqluser;Password=sqlpass";
+	}
+	dbContextOptionsBuilder.UseNpgsql(connectionString)
 		.UseSnakeCaseNamingConvention();
 });
-builder.Services.AddMigration<CoreDbContext>();
+// Only add migration when running in Aspire (when connection string is available)
+if (!string.IsNullOrEmpty(builder.Configuration.GetConnectionString("job-connection")))
+{
+    builder.Services.AddMigration<CoreDbContext>();
+}
 
 
 var app = builder.Build();

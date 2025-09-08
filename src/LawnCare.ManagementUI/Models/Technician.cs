@@ -8,10 +8,11 @@ public class Technician
     public string CellPhone { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
     public string PhotoUrl { get; set; } = string.Empty;
-    public int YearsWithCompany { get; set; }
-    public int MonthsWithCompany { get; set; }
-    public string Status { get; set; } = "Active";
-    public string Specialization { get; set; } = string.Empty;
+    public DateTime StartDate { get; set; }
+    public int Status { get; set; }
+    public string StatusDisplay { get; set; } = string.Empty;
+    public int Specialization { get; set; }
+    public string SpecializationDisplay { get; set; } = string.Empty;
     public DateTime HireDate { get; set; }
     public string Email { get; set; } = string.Empty;
     public string EmergencyContact { get; set; } = string.Empty;
@@ -19,8 +20,10 @@ public class Technician
     public string LicenseNumber { get; set; } = string.Empty;
     public DateTime LicenseExpiry { get; set; }
     public string Notes { get; set; } = string.Empty;
-    public DateTime CreatedDate { get; set; }
-    public DateTime LastModified { get; set; }
+    public int YearsWithCompany { get; set; }
+    public int MonthsWithCompany { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 
     public string FullName => $"{FirstName} {LastName}";
     

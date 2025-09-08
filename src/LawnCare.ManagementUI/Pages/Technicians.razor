@@ -48,7 +48,8 @@
 
         <div class="filter-group">
             <label class="filter-label">Search:</label>
-            <input type="text" class="filter-input" placeholder="Search technicians..." @bind="searchTerm" @oninput="FilterTechnicians" />
+            <input type="text" class="filter-input" placeholder="Search technicians..." @bind="searchTerm"
+                @oninput="FilterTechnicians" />
         </div>
     </div>
 
@@ -68,12 +69,12 @@
                     <div class="technician-card" @onclick="() => ShowTechnicianDetails(technician.Id)">
                         <div class="technician-photo">
                             <img src="@technician.PhotoUrl" alt="@technician.FullName" class="photo" />
-                            <div class="status-indicator status-@technician.Status.ToLower().Replace(" ", "-")"></div>
+                            <div class="status-indicator status-@technician.StatusDisplay.ToLower().Replace(" ", "-")"></div>
                         </div>
 
                         <div class="technician-info">
                             <h3 class="technician-name">@technician.FullName</h3>
-                            <p class="technician-specialization">@technician.Specialization</p>
+                            <p class="technician-specialization">@technician.SpecializationDisplay</p>
 
                             <div class="technician-details">
                                 <div class="detail-item">
@@ -95,8 +96,8 @@
                             </div>
 
                             <div class="technician-footer">
-                                <div class="status-badge status-@technician.Status.ToLower().Replace(" ", "-")">
-                                    @technician.Status
+                                <div class="status-badge status-@technician.StatusDisplay.ToLower().Replace(" ", "-")">
+                                    @technician.StatusDisplay
                                 </div>
                                 <div class="license-info">
                                     License: @technician.LicenseNumber
@@ -126,7 +127,8 @@
 
 @if (showNewTechnicianModal)
 {
-    <NewTechnicianModal IsVisible="showNewTechnicianModal" OnClose="CloseNewTechnicianModal" OnTechnicianCreated="HandleTechnicianCreated" />
+    <NewTechnicianModal IsVisible="showNewTechnicianModal" OnClose="CloseNewTechnicianModal"
+        OnTechnicianCreated="HandleTechnicianCreated" />
 }
 
 @code {
@@ -163,23 +165,23 @@
 
             if (!string.IsNullOrEmpty(selectedStatus))
             {
-                filtered = filtered.Where(t => t.Status == selectedStatus);
+                filtered = filtered.Where(t => t.StatusDisplay == selectedStatus);
             }
 
             if (!string.IsNullOrEmpty(selectedSpecialization))
             {
-                filtered = filtered.Where(t => t.Specialization == selectedSpecialization);
+                filtered = filtered.Where(t => t.SpecializationDisplay == selectedSpecialization);
             }
 
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 var term = searchTerm.ToLowerInvariant();
                 filtered = filtered.Where(t =>
-                    t.FirstName.ToLowerInvariant().Contains(term) ||
-                    t.LastName.ToLowerInvariant().Contains(term) ||
-                    t.FullName.ToLowerInvariant().Contains(term) ||
-                    t.Specialization.ToLowerInvariant().Contains(term) ||
-                    t.Email.ToLowerInvariant().Contains(term)
+                t.FirstName.ToLowerInvariant().Contains(term) ||
+                t.LastName.ToLowerInvariant().Contains(term) ||
+                t.FullName.ToLowerInvariant().Contains(term) ||
+                t.SpecializationDisplay.ToLowerInvariant().Contains(term) ||
+                t.Email.ToLowerInvariant().Contains(term)
                 );
             }
 

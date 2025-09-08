@@ -16,7 +16,7 @@ namespace LawnCare.CoreApi.Domain.Entities
 		// public string FirstName { get; private set; } = null!;
 		// public string FirstName { get; private set; } = null!;
 		// public string FirstName { get; private set; } = null!;
-		
+
 		public DateTimeOffset CreatedAt { get; set; }
 		public DateTimeOffset UpdatedAt { get; set; }
 
@@ -31,7 +31,8 @@ namespace LawnCare.CoreApi.Domain.Entities
 			Email = email;
 			HomePhone = homePhone;
 			CellPhone = cellPhone;
-		}
+            Id = Guid.CreateVersion7();
+        }
 	}
 
 	public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
@@ -40,10 +41,10 @@ namespace LawnCare.CoreApi.Domain.Entities
 		{
 			builder.ToTable("Customers", "public");
 			builder.HasKey(x => x.Id);
-			
+
 			builder.Property(x => x.Id)
 				.ValueGeneratedNever();
-			
+
 			builder.Property(x => x.FirstName)
 				.IsRequired()
 				.HasMaxLength(255)
@@ -60,8 +61,8 @@ namespace LawnCare.CoreApi.Domain.Entities
 					toDb => toDb.Value,
 					fromDb => new EmailAddress(fromDb))
 				.Metadata.SetValueComparer(CoreDbContext.EmailComparer);
-			
-			
+
+
 			builder.Property(x => x.HomePhone)
 				.IsRequired()
 				.HasMaxLength(255)

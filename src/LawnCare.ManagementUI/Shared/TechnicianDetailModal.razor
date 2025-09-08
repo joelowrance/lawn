@@ -9,7 +9,7 @@
             <h2 class="modal-title">Technician Details</h2>
             <button class="modal-close" @onclick="OnClose">×</button>
         </div>
-        
+
         <div class="modal-body">
             @if (isLoading)
             {
@@ -24,11 +24,11 @@
                     <div class="technician-photo-large">
                         <img src="@technician.PhotoUrl" alt="@technician.FullName" class="photo-large" />
                     </div>
-                    
+
                     <div class="technician-details">
                         <h3>@technician.FullName</h3>
                         <p class="specialization">@technician.Specialization</p>
-                        
+
                         <div class="detail-grid">
                             <div class="detail-item">
                                 <label>Phone:</label>
@@ -48,14 +48,15 @@
                             </div>
                             <div class="detail-item">
                                 <label>Status:</label>
-                                <span class="status-badge status-@technician.Status.ToLower().Replace(" ", "-")">@technician.Status</span>
+                                <span
+                                    class="status-badge status-@technician.StatusDisplay.ToLower().Replace(" ", "-")">@technician.StatusDisplay</span>
                             </div>
                             <div class="detail-item">
                                 <label>License:</label>
                                 <span>@technician.LicenseNumber</span>
                             </div>
                         </div>
-                        
+
                         @if (!string.IsNullOrEmpty(technician.Notes))
                         {
                             <div class="notes-section">
@@ -73,7 +74,7 @@
                 </div>
             }
         </div>
-        
+
         <div class="modal-footer">
             <button class="btn btn-secondary" @onclick="OnClose">Close</button>
         </div>
@@ -83,7 +84,7 @@
 @code {
     [Parameter] public Guid TechnicianId { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
-    
+
     private Technician? technician;
     private bool isLoading = true;
 
