@@ -4,7 +4,7 @@ using LawnCare.CoreApi.Domain.ValueObjects;
 using LawnCare.CoreApi.Infrastructure.Database;
 using LawnCare.Shared.Endpoints;
 using LawnCare.Shared.MessageContracts;
-
+using MassTransit;
 using MediatR;
 
 using Microsoft.EntityFrameworkCore;
@@ -33,12 +33,13 @@ public record SubmitEstimateCommandHandler : IRequestHandler<SubmitEstimateComma
 {
 	private readonly IUnitOfWork _unitOfWork;
 	private readonly CoreDbContext _dbContext;
-
-	public SubmitEstimateCommandHandler(IUnitOfWork unitOfWork, CoreDbContext dbContext)
+    private readonly IPublishEndpoint _publishEndpoint;
+	public SubmitEstimateCommandHandler(IUnitOfWork unitOfWork, CoreDbContext dbContext, IPublishEndpoint publishEndpoint)
 	{
 		_unitOfWork = unitOfWork;
 		_dbContext = dbContext;
-	}
+        _publishEndpoint = publishEndpoint;
+    }
 
 	public async Task<SubmitEstimateResult> Handle(SubmitEstimateCommand request, CancellationToken cancellationToken)
 	{
@@ -48,6 +49,8 @@ public record SubmitEstimateCommandHandler : IRequestHandler<SubmitEstimateComma
 			                                          x.CellPhone  == new PhoneNumber(request.Estimate.CustomerCellPhone))
 			.FirstOrDefaultAsync(cancellationToken);
 
+        bool isNewCustomer = customer == null;
+
 		if (customer == null)
 		{
 			customer = new Customer(request.Estimate.CustomerFirstName, request.Estimate.CustomerLastName,
@@ -56,7 +59,7 @@ public record SubmitEstimateCommandHandler : IRequestHandler<SubmitEstimateComma
 				new PhoneNumber(request.Estimate.CustomerCellPhone));
 			_dbContext.Customers.Add(customer);
 		}
-		
+
 		// TODO normalize addresses
 		var location = await _dbContext.Locations
 			.Where(x => x.Street1 == request.Estimate.CustomerAddress1 &&
@@ -72,27 +75,50 @@ public record SubmitEstimateCommandHandler : IRequestHandler<SubmitEstimateComma
 		}
 
 		var job = new Job(request.Estimate.ScheduledDate.ToUniversalTime(), JobPriority.Normal, new Money(request.Estimate.EstimatedCost), location.LocationId);
-		
+
 		// Add service items from the estimate
 		foreach (var service in request.Estimate.Services)
 		{
 			job.AddService(service.ServiceName, 1, service.Notes, new Money(service.Cost));
 		}
-		
+
 		// Add description as a note
 		if (!string.IsNullOrEmpty(request.Estimate.Description))
 		{
 			job.AddNote(request.Estimate.Description);
 		}
-		
+
 		_dbContext.Jobs.Add(job);
-		
+
 		await _unitOfWork.SaveChangesAsync(cancellationToken);
-		
+
 		var customerName = $"{customer.FirstName} {customer.LastName}";
 		var propertyAddress = $"{location.Street1}, {location.City}, {location.State} {location.Postcode.Value}";
-		
+
+        if (isNewCustomer)
+        {
+            await _publishEndpoint.Publish(
+                new SendWelcomeEmailCommand(
+                    new CustomerInfo(
+                        customer.Email.Value,
+                        customer.FirstName,
+                        customer.LastName,
+                        customer.HomePhone.Value,
+                        customer.CellPhone.Value,
+                        new Address(
+                            location.Street1,
+                            location.Street2 ?? "",
+                            location.Street3 ?? "",
+                            location.City,
+                            location.State,
+                            location.Postcode.Value)
+                    )), cancellationToken);
+        }
+
+
+
 		return new SubmitEstimateResult(job.JobId, customerName, propertyAddress);
+
 	}
 }
 
@@ -100,11 +126,11 @@ public record SubmitEstimateCommandHandler : IRequestHandler<SubmitEstimateComma
 /// An "estimate" from the field is generally in agreement with the customer.  The
 /// rep has provided a price for the services requested by the client, and the two
 /// are in agreement on the cost.  A best-guess job schedule day may also be provided,
-/// but this can be highly dependent on weather, and staff/equipment availability 
+/// but this can be highly dependent on weather, and staff/equipment availability
 /// </summary>
 public class JobEstimate
 {
-	public string UserId { get; set; } = string.Empty; 
+	public string UserId { get; set; } = string.Empty;
 	//public string TenantId { get; set; } = null!;
 	public string CustomerFirstName { get; set; }= string.Empty;
 	public string CustomerLastName { get; set; }= string.Empty;

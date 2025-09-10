@@ -26,7 +26,9 @@ public record JobServiceItem(string ServiceName, int Quantity, string Comment, d
 
 public record ProcessCustomerCommand(Guid TenantId, Guid JobId, CustomerInfo Customer);
 public record MoveJobToPendingCommand(Guid JobId, Guid CustomerId);
-public record SendWelcomeEmailCommand(Guid TenantId, Guid CustomerId, CustomerInfo Customer, Guid EstimateId);
+public record SendWelcomeEmailCommandObsolete(Guid TenantId, Guid CustomerId, CustomerInfo Customer, Guid EstimateId);
+public record SendWelcomeEmailCommand(CustomerInfo Customer);
+
 
 // Events
 // TODO: Estimate ID needs to change to job Id for all of these.

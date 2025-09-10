@@ -22,7 +22,7 @@ public class AcceptEstimate : IEndpoint
 		});
 	}
 }
-	
+
 public record AcceptEstimateCommand(FieldEstimate Estimate) : IRequest;
 
 public class AcceptEstimateCommandHandler : IRequestHandler<AcceptEstimateCommand>
@@ -32,8 +32,8 @@ public class AcceptEstimateCommandHandler : IRequestHandler<AcceptEstimateComman
 	private readonly IJobApplicationService  _jobApplicationService;
 
 	public AcceptEstimateCommandHandler(
-		ILogger<AcceptEstimateCommandHandler> logger, 
-		IPublishEndpoint publishEndpoint, 
+		ILogger<AcceptEstimateCommandHandler> logger,
+		IPublishEndpoint publishEndpoint,
 		IJobApplicationService jobApplicationService)
 	{
 		_logger = logger;
@@ -43,23 +43,24 @@ public class AcceptEstimateCommandHandler : IRequestHandler<AcceptEstimateComman
 
 	public async Task Handle(AcceptEstimateCommand request, CancellationToken cancellationToken)
 	{
-		// we want to 
+		// we want to
 		// check if the customer exisits
 		// create the customer
 		// check if the address exists?
 		// create the address
 		// crete the job
 		// use the saga to send out a welcome email
-		// send out a 
-		
-		
-		
-		
-		var job = await _jobApplicationService.CreateJobFromFieldEstimateAsync(request.Estimate);
-		
+		// send out a
+
+
+
+
+		var estimateCreatedResponse = await _jobApplicationService.CreateJobFromFieldEstimateAsync(request.Estimate);
+        var job = estimateCreatedResponse.Job;
+
 		_logger.LogInformation("Created job {JobId}", job.Id);
-		_logger.LogInformation("Queueing estimate for customer validation: @{Estimate}", request.Estimate);		
-		
+		_logger.LogInformation("Queueing estimate for customer validation: @{Estimate}", request.Estimate);
+
 		var estimate = new EstimateReceivedEvent(
 			job.TenantId,
 			job.Id,
@@ -84,9 +85,15 @@ public class AcceptEstimateCommandHandler : IRequestHandler<AcceptEstimateComman
 				request.Estimate.Description,
 				request.Estimate.Services.ToArray()
 			), "HARDCODED ESTIMATOR");
-			
-		
+
+
 		await _publishEndpoint.Publish(estimate, cancellationToken);
+
+        if (estimateCreatedResponse.IsNewCustomer)
+        {
+            await _publishEndpoint.Publish(new SendWelcomeEmailCommand(estimate.Customer), cancellationToken);
+
+        }
 	}
 }
 

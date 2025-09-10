@@ -5,7 +5,7 @@ using LawnCare.JobApi.Domain.Enums;
 using LawnCare.JobApi.Domain.Repositories;
 using LawnCare.JobApi.Domain.ValueObjects;
 using LawnCare.Shared.MessageContracts;
-
+using MassTransit;
 using Address = LawnCare.JobApi.Domain.Entities.Address;
 using JobServiceItem = LawnCare.Shared.MessageContracts.JobServiceItem;
 
@@ -13,7 +13,7 @@ namespace LawnCare.JobApi.Domain.Services;
 
 public interface IJobApplicationService
 {
-	Task<JobResponse> CreateJobFromFieldEstimateAsync(FieldEstimate estimate);
+	Task<EstimateCreatedResponse> CreateJobFromFieldEstimateAsync(FieldEstimate estimate);
 	Task<JobResponse?> GetJobAsync(Guid jobId, Guid tenantId);
 	Task<List<JobResponse>> GetJobsByTenantAsync(Guid tenantId, JobStatus? status = null);
 	Task<bool> ScheduleJobAsync(Guid jobId, Guid tenantId, DateTime scheduledDate, Guid technicianId);
@@ -24,64 +24,67 @@ public class JobApplicationService : IJobApplicationService
 {
         private readonly IJobRepository _jobRepository;
         private readonly ICustomerRepository _customerRepository;
-        
-        private readonly JobDomainService _jobDomainService; 
+        private readonly IPublishEndpoint _publishEndpoint;
+        private readonly JobDomainService _jobDomainService;
         private readonly IUnitOfWork _unitOfWork;
         ILogger<JobApplicationService> _logger;
+
 
         public JobApplicationService(
             IJobRepository jobRepository,
             JobDomainService jobDomainService,
-            IUnitOfWork unitOfWork, ILogger<JobApplicationService> logger, ICustomerRepository customerRepository)
+            IUnitOfWork unitOfWork, ILogger<JobApplicationService> logger, ICustomerRepository customerRepository, IPublishEndpoint publishEndpoint)
         {
             _jobRepository = jobRepository;
             _jobDomainService = jobDomainService;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _customerRepository = customerRepository;
+            _publishEndpoint = publishEndpoint;
         }
-        
-        
 
-        public async Task<JobResponse> CreateJobFromFieldEstimateAsync(FieldEstimate estimate)
+
+
+        public async Task<EstimateCreatedResponse> CreateJobFromFieldEstimateAsync(FieldEstimate estimate)
         {
-	        
+
 	        var existingCustomer = await _customerRepository.FindByFieldEstimateAttributes(estimate);
+            bool isNewCustomer = existingCustomer == null;
 
 	        if (existingCustomer == null)
 	        {
 		        _logger.LogInformation("Customer not found, creating a new one");
 		        existingCustomer = new Customer(
-			        estimate.CustomerFirstName, 
-			        estimate.CustomerLastName, 
-			        estimate.CustomerEmail, 
-			        estimate.CustomerCellPhone, 
+			        estimate.CustomerFirstName,
+			        estimate.CustomerLastName,
+			        estimate.CustomerEmail,
+			        estimate.CustomerCellPhone,
 			        estimate.CustomerHomePhone,
 			        new Address(
-				        estimate.CustomerAddress1, 
-				        estimate.CustomerAddress2, 
-				        estimate.CustomerAddress2, 
-				        estimate.CustomerCity, 
-				        estimate.CustomerState, 
+				        estimate.CustomerAddress1,
+				        estimate.CustomerAddress2,
+				        estimate.CustomerAddress2,
+				        estimate.CustomerCity,
+				        estimate.CustomerState,
 				        estimate.CustomerZip));
-		        
+
 		        await _customerRepository.AddAsync(existingCustomer);
 	        }
-	        
-	        
-	        
-	        
+
+
+
+
             var tenantId = TenantId.From(estimate.TenantId);
-            
-            var  address = new Address(
-	            estimate.CustomerAddress1,
-	            estimate.CustomerAddress2,
-	            estimate.CustomerAddress2,
-	            estimate.CustomerCity,
-	            estimate.CustomerState,
-	            estimate.CustomerZip
-            );
-            
+
+            // var address = new Address(
+	           //  estimate.CustomerAddress1,
+	           //  estimate.CustomerAddress2,
+	           //  estimate.CustomerAddress2,
+	           //  estimate.CustomerCity,
+	           //  estimate.CustomerState,
+	           //  estimate.CustomerZip
+            // );
+
 
             var estimatedDuration = new EstimatedDuration(estimate.EstimatedDuration);
             var estimatedCost = new Money(estimate.EstimatedCost);
@@ -108,12 +111,8 @@ public class JobApplicationService : IJobApplicationService
             await _jobRepository.AddAsync(job);
             await _unitOfWork.SaveChangesAsync();
 
-            return MapToJobResponse(job);
+            return new EstimateCreatedResponse(MapToJobResponse(job), isNewCustomer);
         }
-
-        
-        
-        
 
         public async Task<JobResponse?> GetJobAsync(Guid jobId, Guid tenantId)
         {
@@ -133,7 +132,7 @@ public class JobApplicationService : IJobApplicationService
             if (job == null) return false;
 
             var existingJobs = await _jobRepository.GetByTenantAsync(TenantId.From(tenantId));
-            
+
             if (!_jobDomainService.CanScheduleJob(job, scheduledDate, existingJobs))
                 return false;
 
@@ -204,7 +203,7 @@ public class JobApplicationService : IJobApplicationService
                     r.Price
                 )).ToList(),
                 job.Notes.Select(n => new JobNoteResponse(n.Id,
-	                
+
                     n.Author,
                     n.Content,
                     n.CreatedAt

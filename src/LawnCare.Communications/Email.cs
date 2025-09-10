@@ -119,25 +119,29 @@ namespace LawnCare.Communications
 	public interface IEmailService
 	{
 		public Task SendWelcomeEmail(CustomerInfo messageCustomer);
+		public Task SendJobCreatedEmailAsync(string customerEmail, string customerFirstName, string customerLastName, 
+			string jobDescription, decimal estimatedCost, DateTimeOffset scheduledDate, string technicianName, string propertyAddress);
+		public Task SendJobUpdatedEmailAsync(string customerEmail, string customerFirstName, string customerLastName, 
+			string jobDescription, decimal estimatedCost, DateTimeOffset? scheduledDate, string technicianName, 
+			string propertyAddress, string updateReason, string changesSummary);
+		public Task SendJobCompletedEmailAsync(string customerEmail, string customerFirstName, string customerLastName, 
+			string jobDescription, decimal actualCost, decimal estimatedCost, DateTimeOffset completedDate, 
+			string technicianName, string propertyAddress, string completionNotes);
 	}
 
 	public class EmailService : IEmailService
 	{
 		ILogger<EmailService> _logger;
 		private readonly SmtpClient _client;
+		private readonly EmailDbContext _dbContext;
 
-
-		public EmailService(ILogger<EmailService> logger, SmtpClient client)
+		public EmailService(ILogger<EmailService> logger, SmtpClient client, EmailDbContext dbContext)
 		{
 			_logger = logger;
 			_client = client;
+			_dbContext = dbContext;
 		}
 
-		//public async Task SendWelcomeEmail(Email email)
-		// {
-		// 	//todo:  local smtp
-		// 	//todo: ses / whatever azure has / something esle
-		// }
 		public Task SendWelcomeEmail(CustomerInfo messageCustomer)
 		{
 			var message = new MailMessage();
@@ -155,6 +159,143 @@ namespace LawnCare.Communications
 			{
 				_logger.LogError(ex, "Error sending email to {Email}", messageCustomer.Email);
 				return Task.CompletedTask;
+			}
+		}
+
+		public async Task SendJobCreatedEmailAsync(string customerEmail, string customerFirstName, string customerLastName, 
+			string jobDescription, decimal estimatedCost, DateTimeOffset scheduledDate, string technicianName, string propertyAddress)
+		{
+			var subject = "Your Lawn Care Service Has Been Scheduled";
+			var body = $@"
+				<html>
+				<body>
+					<h2>Hello {customerFirstName} {customerLastName}!</h2>
+					<p>Your lawn care service has been successfully scheduled.</p>
+					
+					<h3>Service Details:</h3>
+					<ul>
+						<li><strong>Service:</strong> {jobDescription}</li>
+						<li><strong>Estimated Cost:</strong> ${estimatedCost:F2}</li>
+						<li><strong>Scheduled Date:</strong> {scheduledDate:MMM dd, yyyy 'at' h:mm tt}</li>
+						<li><strong>Technician:</strong> {technicianName}</li>
+						<li><strong>Property Address:</strong> {propertyAddress}</li>
+					</ul>
+					
+					<p>We'll contact you if there are any changes to your scheduled service.</p>
+					<p>Thank you for choosing Fictional Lawn Care!</p>
+				</body>
+				</html>";
+
+			await SendEmailAsync(customerEmail, subject, body, EmailType.JobScheduled);
+		}
+
+		public async Task SendJobUpdatedEmailAsync(string customerEmail, string customerFirstName, string customerLastName, 
+			string jobDescription, decimal estimatedCost, DateTimeOffset? scheduledDate, string technicianName, 
+			string propertyAddress, string updateReason, string changesSummary)
+		{
+			var subject = "Your Lawn Care Service Has Been Updated";
+			var scheduledDateText = scheduledDate?.ToString("MMM dd, yyyy 'at' h:mm tt") ?? "TBD";
+			
+			var body = $@"
+				<html>
+				<body>
+					<h2>Hello {customerFirstName} {customerLastName}!</h2>
+					<p>Your lawn care service has been updated.</p>
+					
+					<h3>Update Details:</h3>
+					<p><strong>Reason for Update:</strong> {updateReason}</p>
+					<p><strong>Changes Made:</strong> {changesSummary}</p>
+					
+					<h3>Current Service Details:</h3>
+					<ul>
+						<li><strong>Service:</strong> {jobDescription}</li>
+						<li><strong>Estimated Cost:</strong> ${estimatedCost:F2}</li>
+						<li><strong>Scheduled Date:</strong> {scheduledDateText}</li>
+						<li><strong>Technician:</strong> {technicianName}</li>
+						<li><strong>Property Address:</strong> {propertyAddress}</li>
+					</ul>
+					
+					<p>If you have any questions about these changes, please don't hesitate to contact us.</p>
+					<p>Thank you for choosing Fictional Lawn Care!</p>
+				</body>
+				</html>";
+
+			await SendEmailAsync(customerEmail, subject, body, EmailType.JobScheduled);
+		}
+
+		public async Task SendJobCompletedEmailAsync(string customerEmail, string customerFirstName, string customerLastName, 
+			string jobDescription, decimal actualCost, decimal estimatedCost, DateTimeOffset completedDate, 
+			string technicianName, string propertyAddress, string completionNotes)
+		{
+			var subject = "Your Lawn Care Service Has Been Completed";
+			var costDifference = actualCost - estimatedCost;
+			var costDifferenceText = costDifference == 0 ? "No change" : 
+				costDifference > 0 ? $"${costDifference:F2} additional" : 
+				$"${Math.Abs(costDifference):F2} savings";
+			
+			var body = $@"
+				<html>
+				<body>
+					<h2>Hello {customerFirstName} {customerLastName}!</h2>
+					<p>Your lawn care service has been completed successfully.</p>
+					
+					<h3>Service Summary:</h3>
+					<ul>
+						<li><strong>Service:</strong> {jobDescription}</li>
+						<li><strong>Estimated Cost:</strong> ${estimatedCost:F2}</li>
+						<li><strong>Actual Cost:</strong> ${actualCost:F2}</li>
+						<li><strong>Cost Difference:</strong> {costDifferenceText}</li>
+						<li><strong>Completed Date:</strong> {completedDate:MMM dd, yyyy 'at' h:mm tt}</li>
+						<li><strong>Technician:</strong> {technicianName}</li>
+						<li><strong>Property Address:</strong> {propertyAddress}</li>
+					</ul>
+					
+					{(string.IsNullOrWhiteSpace(completionNotes) ? "" : $"<h3>Completion Notes:</h3><p>{completionNotes}</p>")}
+					
+					<p>We hope you're satisfied with our service! If you have any questions or concerns, please don't hesitate to contact us.</p>
+					<p>Thank you for choosing Fictional Lawn Care!</p>
+				</body>
+				</html>";
+
+			await SendEmailAsync(customerEmail, subject, body, EmailType.JobCompleted);
+		}
+
+		private async Task SendEmailAsync(string toEmail, string subject, string body, EmailType emailType)
+		{
+			var emailRecord = new EmailRecord
+			{
+				Id = Guid.NewGuid(),
+				From = "fictionallawncar@gmail.com",
+				To = toEmail,
+				Subject = subject,
+				Body = body,
+				DateCreated = DateTimeOffset.UtcNow
+			};
+
+			try
+			{
+				var message = new MailMessage();
+				message.To.Add(new MailAddress(toEmail));
+				message.Subject = subject;
+				message.Body = body;
+				message.IsBodyHtml = true;
+				message.From = new MailAddress("fictionallawncar@gmail.com");
+
+				_client.Send(message);
+				
+				emailRecord.DateSent = DateTimeOffset.UtcNow;
+				_logger.LogInformation("Successfully sent {EmailType} email to {Email}", emailType, toEmail);
+			}
+			catch (Exception ex)
+			{
+				emailRecord.FailureReason = ex.Message;
+				_logger.LogError(ex, "Error sending {EmailType} email to {Email}", emailType, toEmail);
+				throw; // Re-throw to trigger retry mechanisms
+			}
+			finally
+			{
+				_dbContext.EmailRecords.Add(emailRecord);
+				await _dbContext.SaveChangesAsync();
 			}
 		}
 	}

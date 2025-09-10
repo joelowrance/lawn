@@ -1,5 +1,8 @@
 ﻿namespace LawnCare.JobApi.Application.DTOs
 {
+    public record EstimateCreatedResponse(JobResponse Job, bool IsNewCustomer);
+
+
 	public record JobResponse(
 		Guid Id,
 		Guid TenantId,
@@ -23,7 +26,7 @@
 		DateTimeOffset CreatedAt,
 		DateTimeOffset UpdatedAt
 	);
-	
+
 	public record JobAddressResponse(
 		string Street1,
 		string Street2,

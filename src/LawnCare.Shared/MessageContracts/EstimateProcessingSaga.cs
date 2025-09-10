@@ -86,7 +86,7 @@ namespace LawnCare.Shared.MessageContracts
 					.Then(context => context.Saga.JobId = context.Message.JobId)
 					.If(context => context.Saga.IsNewCustomer,
 						binder => binder
-							.Publish(context => new SendWelcomeEmailCommand(
+							.Publish(context => new SendWelcomeEmailCommandObsolete(
 								context.Saga.TenantId,
 								context.Saga.CustomerId!.Value,
 								context.Saga.CustomerInfo,
